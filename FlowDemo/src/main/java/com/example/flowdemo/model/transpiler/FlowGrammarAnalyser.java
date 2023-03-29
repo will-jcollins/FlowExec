@@ -117,7 +117,7 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
             throw new FlowException(currentDecl.signature(0).Idfr().getText(), idVisitor.visit(ctx.expr()), ErrorType.Expr, "Expression type (" + visit(ctx.expr()) + ") does not match declaration type (" + type + ")");
         }
 
-        return DataType.VoidType; // Dummy return value
+        return DataType.VoidType; // Value is ignored
     }
 
     @Override
@@ -133,16 +133,20 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
         FlowGrammarParser.SignatureContext signature = variableMap.get(identifier);
         DataType type = DataType.fromString(signature.type().getText());
 
+        // Check variable is an array
         if (type != DataType.IntArrayType && type != DataType.BoolArrayType && type != DataType.CharArrayType) {
-            throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Node, "Variable \'" + signature.Idfr().getText() + "\' is not of type: Array");
+            throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Node, "'" + identifier + "' is not of type: Array. Is of type: " + type);
         }
 
+        // Check index is of type int
+        DataType indexType = visit(ctx.expr(0));
+        if (type != DataType.IntType) {
+            throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Node, "Index is not of type: Int. Is of type: " + type);
+        }
 
-
-        // Check declaration type matches expression type
-        if (type != visit(ctx.expr())) {
-            // Type error : raise exception
-            throw new FlowException(currentDecl.signature(0).Idfr().getText(), idVisitor.visit(ctx.expr()), ErrorType.Expr, "Expression type (" + visit(ctx.expr()) + ") does not match declaration type (" + type + ")");
+        DataType valueType = visit(ctx.expr(0));
+        if (!((type == DataType.IntArrayType && valueType == DataType.IntType) || (type == DataType.BoolArrayType && valueType == DataType.BoolType)  || (type == DataType.CharArrayType && valueType == DataType.CharType))) {
+            throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Node, "Value type: " + valueType + " does not match Array's element type: " + type);
         }
 
         return DataType.VoidType; // Value is ignored
@@ -482,6 +486,8 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
                 if (leftType != DataType.IntArrayType || leftType != DataType.BoolArrayType || leftType != DataType.CharArrayType) {
                     throw new FlowException(currentDecl.signature(0).Idfr().getText(), idVisitor.visit(ctx.expr(0)), ErrorType.Expr, "Operator expr takes type: Array and was given type: " + leftType.toString());
                 }
+
+                // Check right expression is an int
                 if (rightType != DataType.IntType) {
                     throw new FlowException(currentDecl.signature(0).Idfr().getText(), idVisitor.visit(ctx.expr(0)), ErrorType.Expr, "Operator expr takes type: Int and was given type: " + rightType.toString());
                 }
