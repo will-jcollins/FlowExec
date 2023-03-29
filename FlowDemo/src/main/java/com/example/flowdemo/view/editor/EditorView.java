@@ -14,12 +14,10 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 
 import java.util.*;
@@ -243,13 +241,19 @@ public class EditorView extends BorderPane {
             out = new UIIf(in.getId());
         } else if (in instanceof WhileNode) {
             out = new UIWhile(in.getId());
+        } else if (in instanceof AssignArrayNode assignArrayNode) {
+            UIAssign uiAssignArray = new UIAssignArray(in.getId());
+
+            // Set a listener to reflect any changes to the variable textField in the model
+            uiAssignArray.getVarName().textProperty().addListener(e -> viewModel.updateAssignNodeIdentifier(assignArrayNode, uiAssignArray.getVarName().getText()));
+            out = uiAssignArray;
         } else if (in instanceof AssignNode assignNode) {
             UIAssign uiAssign = new UIAssign(in.getId());
 
             // Set a listener to reflect any changes to the variable textField in the model
             uiAssign.getVarName().textProperty().addListener(e -> viewModel.updateAssignNodeIdentifier(assignNode, uiAssign.getVarName().getText()));
             out = uiAssign;
-        } else if (in instanceof DeclareAssignNode declareAssignNode)  {
+        } else if (in instanceof DeclareAssignNode declareAssignNode) {
             UIDeclareAssign uiDeclareAssign = new UIDeclareAssign(in.getId());
 
             // Set a listener to reflect any changes to the variable textField and type ComboBox in the model
@@ -559,13 +563,8 @@ public class EditorView extends BorderPane {
                 selectedFlowRoot.updateLayout();
             });
             out = uiCallExpr;
-        }
-
-        // Add drag and drop handlers to expressions placeholders nested within other expressions
-        if (out instanceof UIExprContainer uiExprContainer) {
-            for (ExprPlaceholder placeholder : uiExprContainer.getExprPlaceholders()) {
-                setNestedExprPlaceholderHandlers(placeholder);
-            }
+        } else if (expr instanceof ArrayLit arrayLit) {
+            out = new UIArray(arrayLit.getId());
         }
 
         // If an expression was generated and event handlers for drag events
@@ -575,6 +574,13 @@ public class EditorView extends BorderPane {
 
         // Populate expression with model information
         updateExpr(out, expr);
+
+        // Add drag and drop handlers to expressions placeholders nested within other expressions
+        if (out instanceof UIExprContainer uiExprContainer) {
+            for (ExprPlaceholder placeholder : uiExprContainer.getExprPlaceholders()) {
+                setNestedExprPlaceholderHandlers(placeholder);
+            }
+        }
 
         return out;
     }
@@ -603,6 +609,8 @@ public class EditorView extends BorderPane {
             }
         } else if (expr instanceof CallExpr callExpr && uiExpr instanceof UICallExpr uiCallExpr) {
             uiCallExpr.getComboBox().getSelectionModel().select(callExpr.getIdentifier());
+        } else if (expr instanceof ArrayLit arrayLit && uiExpr instanceof UIArray uiArray) {
+            uiArray.setNumberOfElements(arrayLit.getExprs().size() + 1);
         }
 
         if (expr instanceof ExprContainer exprContainer && uiExpr instanceof UIExprContainer uiExprContainer) {

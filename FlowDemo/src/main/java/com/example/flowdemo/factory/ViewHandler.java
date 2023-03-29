@@ -3,6 +3,7 @@ package com.example.flowdemo.factory;
 import com.example.flowdemo.model.flow.nodes.Flow;
 import com.example.flowdemo.view.editor.EditorView;
 import com.example.flowdemo.view.editor.EditorViewModel;
+import com.example.flowdemo.view.editor.expr.UIArray;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
@@ -25,7 +26,6 @@ public class ViewHandler {
         Pane root = new EditorView(new EditorViewModel());
         Scene scene = new Scene(root);
         stage.setScene(scene);
-
 
         // Load CSS
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();

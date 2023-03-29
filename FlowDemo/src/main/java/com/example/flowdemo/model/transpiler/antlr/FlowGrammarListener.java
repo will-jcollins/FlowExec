@@ -50,6 +50,18 @@ public interface FlowGrammarListener extends ParseTreeListener {
 	 */
 	void exitDeclAssignStmt(FlowGrammarParser.DeclAssignStmtContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code ArrayAssignStmt}
+	 * labeled alternative in {@link FlowGrammarParser#stmt}.
+	 * @param ctx the parse tree
+	 */
+	void enterArrayAssignStmt(FlowGrammarParser.ArrayAssignStmtContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ArrayAssignStmt}
+	 * labeled alternative in {@link FlowGrammarParser#stmt}.
+	 * @param ctx the parse tree
+	 */
+	void exitArrayAssignStmt(FlowGrammarParser.ArrayAssignStmtContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code AssignStmt}
 	 * labeled alternative in {@link FlowGrammarParser#stmt}.
 	 * @param ctx the parse tree
@@ -217,6 +229,18 @@ public interface FlowGrammarListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitOpExpr(FlowGrammarParser.OpExprContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ArrayExpr}
+	 * labeled alternative in {@link FlowGrammarParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterArrayExpr(FlowGrammarParser.ArrayExprContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ArrayExpr}
+	 * labeled alternative in {@link FlowGrammarParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitArrayExpr(FlowGrammarParser.ArrayExprContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link FlowGrammarParser#op}.
 	 * @param ctx the parse tree

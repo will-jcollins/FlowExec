@@ -37,6 +37,6 @@ public class WhileNode extends FlowNode implements ExprContainer, FlowContainer 
      */
     @Override
     public String toCode() {
-        return super.toCode() + " " + "while (" + (condition == null ? "" : condition.toCode()) + ") {\n" + loopBody.toBodyCode().indent(5) + "}";
+        return super.toCode() + " " + "While (" + (condition == null ? "" : condition.toCode()) + ") {\n" + loopBody.toBodyCode().indent(5) + "}";
     }
 }

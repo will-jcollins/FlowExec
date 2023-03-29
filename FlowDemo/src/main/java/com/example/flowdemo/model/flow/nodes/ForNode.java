@@ -62,7 +62,7 @@ public class ForNode extends FlowNode implements ExprContainer, FlowContainer {
     @Override
     public String toCode() {
         StringBuilder sb = new StringBuilder();
-        sb.append(super.toCode() + " " + "for (int " + identifier + " = " + (startVal == null ? "" : startVal.toCode()) + ", " + (endVal == null ? "" : endVal.toCode()) + ") {\n");
+        sb.append(super.toCode() + " " + "For (Int " + identifier + " = " + (startVal == null ? "" : startVal.toCode()) + ", " + (endVal == null ? "" : endVal.toCode()) + ") {\n");
         sb.append(loopBody.toBodyCode().indent(5));
         sb.append("}");
         return sb.toString();

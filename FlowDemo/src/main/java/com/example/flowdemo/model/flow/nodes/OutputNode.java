@@ -28,6 +28,6 @@ public class OutputNode extends FlowNode implements ExprContainer {
      */
     @Override
     public String toCode() {
-        return super.toCode() + " " + "output(" + (val == null ? "" : val.toCode()) + ");";
+        return super.toCode() + " " + "Output(" + (val == null ? "" : val.toCode()) + ");";
     }
 }

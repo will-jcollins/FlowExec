@@ -4,10 +4,13 @@ package com.example.flowdemo.model.flow;
  * Enumeration of flow-chart supported data types
  */
 public enum DataType {
-    IntType("int"),
-    BoolType("bool"),
-    CharType("char"),
-    VoidType("void");
+    IntType("Int"),
+    BoolType("Bool"),
+    CharType("Char"),
+    VoidType("Void"),
+    IntArrayType("IntArray"),
+    BoolArrayType("BoolArray"),
+    CharArrayType("CharArray");
 
     private String code;
 

@@ -20,10 +20,10 @@ import java.util.regex.Pattern;
  */
 public class UIAssign extends UICell implements UIExprContainer {
 
-    private Rectangle back; // Backing rectangle
-    private TextField varName; // Input for variable name
+    protected Rectangle back; // Backing rectangle
+    private TextField indexField; // Input for variable name
     private Label equals;
-    private HBox row; // Container for input elements
+    protected HBox row; // Container for input elements
     private ExprPlaceholder value; // Expression input
 
     public UIAssign(int cellID) {
@@ -40,17 +40,17 @@ public class UIAssign extends UICell implements UIExprContainer {
         row.setSpacing(10.0d);
 
         // Create textField for variable identifier
-        varName = new TextField();
-        varName.setPrefWidth(100.0d);
-        varName.setPromptText("Variable Name");
-        varName.textProperty().addListener((observableValue, oldVal, newVal) -> {
+        indexField = new TextField();
+        indexField.setPrefWidth(100.0d);
+        indexField.setPromptText("Variable Name");
+        indexField.textProperty().addListener((observableValue, oldVal, newVal) -> {
             Pattern idfrPattern = Pattern.compile("([a-z][a-zA-Z0-9]*)?");
             Matcher matcher = idfrPattern.matcher(newVal);
             if (!matcher.find()) {
-                varName.setText(oldVal);
+                indexField.setText(oldVal);
             }
         });
-        row.getChildren().add(varName);
+        row.getChildren().add(indexField);
 
         equals = new Label("=");
         row.getChildren().add(equals);
@@ -63,7 +63,7 @@ public class UIAssign extends UICell implements UIExprContainer {
 
         // Create background rectangle
         back = new Rectangle(
-                varName.getPrefWidth() + equals.getWidth() + value.getWidth() + INSET + 2 * row.getSpacing(),
+                indexField.getPrefWidth() + equals.getWidth() + value.getWidth() + INSET + 2 * row.getSpacing(),
                 value.getHeight() + INSET, Color.WHITE
         );
         root.getChildren().add(back);
@@ -76,7 +76,7 @@ public class UIAssign extends UICell implements UIExprContainer {
      * @return TextField for variable identifier
      */
     public TextField getVarName() {
-        return varName;
+        return indexField;
     }
 
     @Override
@@ -106,7 +106,7 @@ public class UIAssign extends UICell implements UIExprContainer {
 
     @Override
     public void updateLayout() {
-        back.setWidth(varName.getPrefWidth() + equals.getWidth() + value.getWidth() + INSET + 2 * row.getSpacing());
+        back.setWidth(indexField.getPrefWidth() + equals.getWidth() + value.getWidth() + INSET + 2 * row.getSpacing());
         back.setHeight(value.getHeight() + INSET);
     }
 
@@ -118,6 +118,6 @@ public class UIAssign extends UICell implements UIExprContainer {
 
     @Override
     public boolean isComplete() {
-        return !varName.getText().equals("") && (value.getExpr() != null ? value.getExpr().isComplete() : false);
+        return !indexField.getText().equals("") && (value.getExpr() != null ? value.getExpr().isComplete() : false);
     }
 }

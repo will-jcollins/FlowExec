@@ -39,8 +39,8 @@ public class IfNode extends FlowNode implements ExprContainer, FlowContainer {
     @Override
     public String toCode() {
         StringBuilder sb = new StringBuilder();
-        sb.append(super.toCode() + " " + "if (" + (condition == null ? "" : condition.toCode()) + ") {\n");
-        sb.append(ifBody.toBodyCode().indent(5) + "} else {\n");
+        sb.append(super.toCode() + " " + "If (" + (condition == null ? "" : condition.toCode()) + ") {\n");
+        sb.append(ifBody.toBodyCode().indent(5) + "} Else {\n");
         sb.append(elseBody.toBodyCode().indent(5) + "}");
 
         return sb.toString();
