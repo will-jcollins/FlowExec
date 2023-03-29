@@ -1,0 +1,113 @@
+/** CSS **/
+
+.default-shape {
+    -fx-fill: WHITE;
+    -fx-stroke-width: 2;
+    -fx-stroke: BLACK;
+}
+
+.drag-over-shape {
+    -fx-fill: WHITE;
+    -fx-stroke-width: 2;
+    -fx-stroke: BLUE;
+}
+
+.error-shape {
+    -fx-fill: PINK;
+    -fx-stroke-width: 2;
+    -fx-stroke: RED;
+}
+
+.mouse-over-shape {
+    -fx-fill: WHITE;
+    -fx-stroke-width: 3;
+    -fx-stroke: GRAY;
+}
+.mouse-over-line {
+    -fx-fill: TRANSPARENT;
+    -fx-stroke-width: 3;
+    -fx-stroke: GRAY;
+}
+
+.default-line {
+    -fx-fill: TRANSPARENT;
+    -fx-stroke-width: 2;
+    -fx-stroke: BLACK;
+}
+
+.drag-over-line {
+    -fx-fill: TRANSPARENT;
+    -fx-stroke-width: 2;
+    -fx-stroke: BLUE;
+}
+
+.error-line {
+    -fx-fill: TRANSPARENT;
+    -fx-stroke-width: 2;
+    -fx-stroke: RED;
+}
+
+.button {
+    -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, -fx-inner-border, white;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+.text-field {
+    -fx-background-color: -fx-text-box-border, -fx-background ;
+    -fx-background-insets: 0, 0 0 1 0 ;
+    -fx-background-radius: 0 ;
+}
+.text-field:focused {
+    -fx-background-color: -fx-focus-color, -fx-background ;
+}
+
+.combo-box-base {
+    -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, -fx-inner-border, white;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-background-color: WHITE;
+}
+
+.tab-pane {
+    -fx-tab-min-width: 50px;
+}
+
+.scroll-bar {
+  -fx-background-color: WHITE;
+}
+
+.corner {
+    -fx-background-color: WHITE;
+}
+
+#grid {
+    -fx-background-color: #FFFFFF,
+        linear-gradient(from 0.5px 0.0px to 20.5px  0.0px, repeat, #dbdbdb 2%, transparent 2%),
+        linear-gradient(from 0.0px 0.5px to  0.0px 20.5px, repeat, #dbdbdb 2%, transparent 2%);
+}
+
+#description {
+    -fx-background-color: WHITE;
+    -fx-stroke-width: 2;
+    -fx-stroke: BLACK;
+}
+
+#item-list {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+#default .shape {
+    -fx-fill: WHITE;
+    -fx-stroke-width: 2;
+    -fx-stroke: BLACK;
+}
+
+.root {
+    -fx-font-family: "Trebuchet MS";
+    -fx-font-size: 15px;
+}
