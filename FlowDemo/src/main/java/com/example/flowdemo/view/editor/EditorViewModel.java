@@ -24,7 +24,6 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 public class EditorViewModel {
@@ -188,6 +187,9 @@ public class EditorViewModel {
             case Assign:
                 dragNode = new AssignNode();
                 break;
+            case AssignArray:
+                dragNode = new AssignArrayNode();
+                break;
             case DeclareAssign:
                 dragNode = new DeclareAssignNode();
                 break;
@@ -217,6 +219,9 @@ public class EditorViewModel {
                 break;
             case CallExpr:
                 dragExpr = new CallExpr();
+                break;
+            case ArrayLit:
+                dragExpr = new ArrayLit();
                 break;
             default:
                 break;

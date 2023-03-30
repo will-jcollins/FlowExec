@@ -36,6 +36,13 @@ public interface FlowGrammarVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitDeclAssignStmt(FlowGrammarParser.DeclAssignStmtContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code ArrayAssignStmt}
+	 * labeled alternative in {@link FlowGrammarParser#stmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayAssignStmt(FlowGrammarParser.ArrayAssignStmtContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code AssignStmt}
 	 * labeled alternative in {@link FlowGrammarParser#stmt}.
 	 * @param ctx the parse tree
@@ -133,6 +140,13 @@ public interface FlowGrammarVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitOpExpr(FlowGrammarParser.OpExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ArrayExpr}
+	 * labeled alternative in {@link FlowGrammarParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayExpr(FlowGrammarParser.ArrayExprContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link FlowGrammarParser#op}.
 	 * @param ctx the parse tree

@@ -6,12 +6,12 @@ import com.example.flowdemo.model.flow.expression.Operator;
 import com.example.flowdemo.model.transpiler.antlr.FlowGrammarBaseVisitor;
 import com.example.flowdemo.model.transpiler.antlr.FlowGrammarParser;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
     private static IdVisitor idVisitor = new IdVisitor();
     private FlowGrammarParser.DeclContext currentDecl;
-    private boolean hasReturnStmt;
     private HashMap<String, FlowGrammarParser.DeclContext> functionMap = new HashMap<>();
     private HashMap<String, FlowGrammarParser.SignatureContext> variableMap = new HashMap<>();
 
@@ -45,9 +45,6 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
 
     @Override
     public DataType visitDecl(FlowGrammarParser.DeclContext ctx) {
-        // Boolean flag that tracks whether a value is returned from the function
-        hasReturnStmt = false;
-
         // Create new variable table to track function's local variables
         variableMap = new HashMap<>();
         currentDecl = ctx;
@@ -73,15 +70,6 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
 
         // Analyse function body
         visit(ctx.block());
-
-        DataType type = DataType.fromString(ctx.signature(0).type().getText());
-
-        // Check that function has a return value
-        if (!hasReturnStmt && type != DataType.VoidType) {
-            throw new FlowException(currentDecl.signature(0).Idfr().getText(), -1, ErrorType.Function, "Missing return value");
-        } else if (hasReturnStmt && type == DataType.VoidType) {
-            throw new FlowException(currentDecl.signature(0).Idfr().getText(), -1, ErrorType.Function, "Unexpected return statement");
-        }
 
         return DataType.VoidType; // Value is ignored
     }
@@ -114,10 +102,42 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
         // Check declaration type matches expression type
         if (type != visit(ctx.expr())) {
             // Type error: raise exception
-            throw new FlowException(currentDecl.signature(0).Idfr().getText(), idVisitor.visit(ctx.expr()), ErrorType.Expr, "Expression type (" + visit(ctx.expr()) + ") does not match declaration type (" + type + ")");
+            throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Expr, "Expression type (" + visit(ctx.expr()) + ") does not match declaration type (" + type + ")");
         }
 
-        return DataType.VoidType; // Dummy return value
+        return DataType.VoidType; // Value is ignored
+    }
+
+    @Override
+    public DataType visitArrayAssignStmt(FlowGrammarParser.ArrayAssignStmtContext ctx) {
+        String identifier = ctx.Idfr().getText();
+
+        // Check variable has been declared
+        if (!variableMap.containsKey(ctx.Idfr().getText())) {
+            // Variable has not been declared: raise exception
+            throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Node, identifier + " has not been declared");
+        }
+
+        FlowGrammarParser.SignatureContext signature = variableMap.get(identifier);
+        DataType type = DataType.fromString(signature.type().getText());
+
+        // Check variable is an array
+        if (type != DataType.IntArrayType && type != DataType.BoolArrayType && type != DataType.CharArrayType) {
+            throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Node, "'" + identifier + "' is not of type: Array. Is of type: " + type);
+        }
+
+        // Check index is of type int
+        DataType indexType = visit(ctx.expr(0));
+        if (indexType != DataType.IntType) {
+            throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Node, "Index is not of type: Int. Is of type: " + indexType);
+        }
+
+        DataType valueType = visit(ctx.expr(1));
+        if (!((type == DataType.IntArrayType && valueType == DataType.IntType) || (type == DataType.BoolArrayType && valueType == DataType.BoolType)  || (type == DataType.CharArrayType && valueType == DataType.CharType))) {
+            throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Node, "Value type: " + valueType + " does not match Array's element type: " + type);
+        }
+
+        return DataType.VoidType; // Value is ignored
     }
 
     @Override
@@ -144,6 +164,12 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
 
     @Override
     public DataType visitOutputStmt(FlowGrammarParser.OutputStmtContext ctx) {
+        // Check output expression has a type
+        DataType outputType = visit(ctx.expr());
+        if (outputType == DataType.VoidType) {
+            throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Node, "Output type must not be Void");
+        }
+
         return DataType.VoidType;
     }
 
@@ -203,7 +229,7 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
             throw new FlowException(currentDecl.signature(0).Idfr().getText(), idVisitor.visit(ctx.expr(0)), ErrorType.Expr , "For loop start value is not of type int, instead: " + startType.toString());
         }
 
-        // Check initial value is an integer
+        // Check end value is an integer
         DataType endType = visit(ctx.expr(1));
         if (endType != DataType.IntType) {
             // Condition expression has incorrect type : raise exception
@@ -248,14 +274,17 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
 
     @Override
     public DataType visitReturnStmt(FlowGrammarParser.ReturnStmtContext ctx) {
-        hasReturnStmt = true;
-
         DataType returnType = visit(ctx.expr());
-        DataType functionType = DataType.fromString(currentDecl.signature.type().getText());
+        DataType functionType = DataType.fromString(currentDecl.signature(0).type().getText());
+
+        // Check function should have a return value
+        if (functionType == DataType.VoidType) {
+            throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Node, "Function should not have a return value.");
+        }
 
         if (returnType != functionType) {
             // Check return type matches function type
-            throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Node, "Return type (" + returnType + ") does not match function definition type (" + functionType + ")");
+            throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Node, "Return type: " + returnType + ", does not match function definition type: " + functionType + ".");
         }
 
         return returnType;
@@ -328,20 +357,61 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
     }
 
     @Override
+    public DataType visitArrayExpr(FlowGrammarParser.ArrayExprContext ctx) {
+        if (ctx.expr().size() < 1) {
+            throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Expr, "Array must have at least one element.");
+        }
+
+        DataType elementType = visit(ctx.expr(0));
+
+        for (int i = 1; i < ctx.expr().size(); i++) {
+            if (visit(ctx.expr(i)) != elementType) {
+                throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Expr, "Array elements' type must be uniform.");
+            }
+        }
+
+        DataType arrayType;
+
+        switch (elementType) {
+            case IntType:
+                arrayType = DataType.IntArrayType;
+                break;
+            case BoolType:
+                arrayType = DataType.BoolArrayType;
+                break;
+            case CharType:
+                arrayType = DataType.CharArrayType;
+                break;
+            default:
+                throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Expr, "Array elements' type must be Int, Bool or Char. Instead is: " + elementType.toString());
+        }
+
+        return arrayType;
+    }
+
+    @Override
     public DataType visitModifierExpr(FlowGrammarParser.ModifierExprContext ctx) {
         Modifier modifier = Modifier.fromString(ctx.mod().getText());
+        DataType inputType = visit(ctx.expr());
         DataType type;
 
         switch (modifier) {
             case Not:
-                DataType inputType = visit(ctx.expr());
 
                 // Check value being modified is of bool type
                 if (inputType != DataType.BoolType) {
-                    throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Expr, "Modifier expr takes type: bool and was given type: " + inputType.toString());
+                    throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Expr, "NOT expr takes type: bool and was given type: " + inputType.toString());
                 }
 
                 type = DataType.BoolType;
+                break;
+            case Size:
+                // Check input value is an array
+                if (inputType != DataType.IntArrayType && inputType != DataType.BoolArrayType && inputType != DataType.CharArrayType) {
+                    throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Expr, "SIZE expr takes type: Array and was given type: " + inputType.toString());
+                }
+
+                type = DataType.IntType;
                 break;
             default:
                 throw new IllegalStateException("Parse error: check modifier implementation in analyser");
@@ -371,8 +441,8 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
                     throw new FlowException(currentDecl.signature(0).Idfr().getText(), idVisitor.visit(ctx.expr(0)), ErrorType.Expr, "Operator expr takes type: bool and was given type: " + leftType.toString());
                 }
 
-                if (leftType != DataType.BoolType) {
-                    throw new FlowException(currentDecl.signature(0).Idfr().getText(), idVisitor.visit(ctx.expr(0)), ErrorType.Expr, "Operator expr takes type: bool and was given type: " + rightType.toString());
+                if (rightType != DataType.BoolType) {
+                    throw new FlowException(currentDecl.signature(0).Idfr().getText(), idVisitor.visit(ctx.expr(1)), ErrorType.Expr, "Operator expr takes type: bool and was given type: " + rightType.toString());
                 }
 
                 type = DataType.BoolType;
@@ -387,8 +457,8 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
                     throw new FlowException(currentDecl.signature(0).Idfr().getText(), idVisitor.visit(ctx.expr(0)), ErrorType.Expr, "Operator expr takes type: int and was given type: " + leftType.toString());
                 }
 
-                if (leftType != DataType.IntType) {
-                    throw new FlowException(currentDecl.signature(0).Idfr().getText(), idVisitor.visit(ctx.expr(0)), ErrorType.Expr, "Operator expr takes type: int and was given type: " + rightType.toString());
+                if (rightType != DataType.IntType) {
+                    throw new FlowException(currentDecl.signature(0).Idfr().getText(), idVisitor.visit(ctx.expr(1)), ErrorType.Expr, "Operator expr takes type: int and was given type: " + rightType.toString());
                 }
 
                 type = DataType.IntType;
@@ -403,11 +473,36 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
                     throw new FlowException(currentDecl.signature(0).Idfr().getText(), idVisitor.visit(ctx.expr(0)), ErrorType.Expr, "Operator expr takes type: int and was given type: " + leftType.toString());
                 }
 
-                if (leftType != DataType.IntType) {
-                    throw new FlowException(currentDecl.signature(0).Idfr().getText(), idVisitor.visit(ctx.expr(0)), ErrorType.Expr, "Operator expr takes type: int and was given type: " + rightType.toString());
+                if (rightType != DataType.IntType) {
+                    throw new FlowException(currentDecl.signature(0).Idfr().getText(), idVisitor.visit(ctx.expr(1)), ErrorType.Expr, "Operator expr takes type: int and was given type: " + rightType.toString());
                 }
 
                 type = DataType.BoolType;
+                break;
+            case Index:
+                // Check left expression is an array
+                if (leftType != DataType.IntArrayType && leftType != DataType.BoolArrayType && leftType != DataType.CharArrayType) {
+                    throw new FlowException(currentDecl.signature(0).Idfr().getText(), idVisitor.visit(ctx.expr(0)), ErrorType.Expr, "Operator expr takes type: Array and was given type: " + leftType.toString());
+                }
+
+                // Check right expression is an int
+                if (rightType != DataType.IntType) {
+                    throw new FlowException(currentDecl.signature(0).Idfr().getText(), idVisitor.visit(ctx.expr(0)), ErrorType.Expr, "Operator expr takes type: Int and was given type: " + rightType.toString());
+                }
+
+                switch (leftType) {
+                    case IntArrayType:
+                        type = DataType.IntType;
+                        break;
+                    case BoolArrayType:
+                        type = DataType.BoolType;
+                        break;
+                    case CharArrayType:
+                        type = DataType.CharType;
+                        break;
+                    default:
+                        throw new IllegalStateException("Impossible state reached: check operator implementation in analyser");
+                }
                 break;
             default:
                 throw new IllegalStateException("Parse error: check operator implementation in analyser");

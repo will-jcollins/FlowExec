@@ -105,7 +105,7 @@ public class NewItem extends VBox {
 //            });
 //        }
 
-        getChildren().add(new Label(type.name()));
+        getChildren().add(new Label(type.getLabel()));
     }
 
     public ItemType getValue() {

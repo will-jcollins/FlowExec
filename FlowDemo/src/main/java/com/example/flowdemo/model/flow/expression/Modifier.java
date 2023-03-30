@@ -4,7 +4,8 @@ package com.example.flowdemo.model.flow.expression;
  * Enumerates an operator that is applied to one argument
  */
 public enum Modifier {
-    Not("NOT");
+    Not("NOT"),
+    Size("SIZE");
 
     private String text;
 

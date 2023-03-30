@@ -17,7 +17,7 @@ public class ReturnNode extends FlowNode implements ExprContainer {
      */
     @Override
     public String toCode() {
-        return super.toCode() + " " + "return " + (expr == null ? "" : expr.toCode());
+        return super.toCode() + " " + "Return " + (expr == null ? "" : expr.toCode());
     }
 
     @Override

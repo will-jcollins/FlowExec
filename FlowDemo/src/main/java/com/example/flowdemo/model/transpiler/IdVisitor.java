@@ -44,5 +44,8 @@ public class IdVisitor extends FlowGrammarBaseVisitor<Integer> {
         return toId(ctx.ComponentId().getText());
     }
 
-
+    @Override
+    public Integer visitArrayExpr(FlowGrammarParser.ArrayExprContext ctx) {
+        return toId(ctx.ComponentId().getText());
+    }
 }

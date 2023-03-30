@@ -18,7 +18,8 @@ public enum Operator {
     And         ("AND"),
     Or          ("OR"),
     Xor         ("XOR"),
-    Eq          ("EQUALS");
+    Eq          ("EQUALS"),
+    Index       ("INDEX");
 
     private String code;
 
