@@ -1,9 +1,11 @@
 package com.example.flowdemo.model.flow;
 
+import java.io.Serializable;
+
 /**
  * Model representation of a typed identifier
  */
-public class Signature {
+public class Signature implements Serializable {
 
     private String identifier;
     private DataType type;
