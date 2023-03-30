@@ -708,8 +708,6 @@ public class EditorViewModel {
                     Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
                     successAlert.setContentText("Flow program loaded.");
                     successAlert.showAndWait();
-                    selectModel("main");
-                    signalUpdate();
                 } catch (IOException | ClassNotFoundException | ClassCastException e) {
                     // Notify user of failure
                     Alert failAlert = new Alert(Alert.AlertType.ERROR);

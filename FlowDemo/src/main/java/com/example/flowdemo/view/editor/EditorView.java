@@ -70,7 +70,11 @@ public class EditorView extends BorderPane {
         Tab mainTab = new Tab("main", mainView);
         editorRoot.getTabs().add(mainTab);
         editorRoot.getSelectionModel().select(mainTab);
-        editorRoot.getSelectionModel().selectedItemProperty().addListener(e -> selectFlow(editorRoot.getSelectionModel().getSelectedItem().getText()));
+        editorRoot.getSelectionModel().selectedItemProperty().addListener(e -> {
+            if (editorRoot.getSelectionModel().getSelectedItem() != null) {
+                selectFlow(editorRoot.getSelectionModel().getSelectedItem().getText());
+            }
+        });
         setCenter(editorRoot);
 
         // Add start and end cells to main's root flow
@@ -122,7 +126,40 @@ public class EditorView extends BorderPane {
         toolbar.getChildren().add(saveButton);
 
         Button loadButton = new Button("Load");
-        loadButton.setOnMouseClicked(e -> viewModel.loadModel());
+        loadButton.setOnMouseClicked(e -> {
+            viewModel.loadModel();
+
+            // Create new tabs with new UIFlows
+            editorRoot.getTabs().clear();
+
+            List<String> identifiers = viewModel.getFunctionIdentifiers();
+            for (int i = identifiers.size() - 1; i >= 0; i--) {
+                String identifier = identifiers.get(i);
+                // Create function's UIFlows
+                UIFlow flowRoot = new UIFlow(UICell.IRRELEVANT_ID);
+                UIFlow flowBody = new UIFlow(UICell.IRRELEVANT_ID);
+                UISquircle startSquircle = new UISquircle("Start", UICell.IRRELEVANT_ID);
+                UISquircle endSquircle = new UISquircle("End", UICell.IRRELEVANT_ID);
+                flowRoot.addCell(startSquircle, 0);
+                flowRoot.addCell(flowBody, 1);
+                flowRoot.addCell(endSquircle, 2);
+
+                // Add function to View maps
+                functionRootMap.put(identifier, flowRoot);
+                functionFlowMap.put(identifier, flowBody);
+
+                // Set event handlers for root UIFlow placeholder
+                setCellPlaceholderHandlers(flowBody.getPlaceholder());
+
+                // Create ViewPort and add it to the editor TabPane
+                ZoomableScrollPane editorView = new ZoomableScrollPane(flowRoot);
+                editorView.setId("grid");
+                Tab tab = new Tab(identifier, editorView);
+                editorRoot.getTabs().add(tab);
+            }
+
+            selectFlow("main");
+        });
         toolbar.getChildren().add(loadButton);
 
         addButton = new Button("Add function");
@@ -169,9 +206,7 @@ public class EditorView extends BorderPane {
         importFlow(viewModel.getFlowNodes(), selectedFlowBody);
 
         // Add listener to binding
-        updateSignal.addListener((observableValue, oldValue, newValue) -> {
-            importFlow(viewModel.getFlowNodes(), functionFlowMap.get(selectedFlow));
-        });
+        updateSignal.addListener((observableValue, oldValue, newValue) -> importFlow(viewModel.getFlowNodes(), functionFlowMap.get(selectedFlow)));
     }
 
 
@@ -224,16 +259,11 @@ public class EditorView extends BorderPane {
         }
 
         // Reflect changes outside the UI thread to prevent blocking
-        Runnable a = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    sleep(50);
-                    Platform.runLater(() -> selectedFlowRoot.updateLayout());
-                } catch (InterruptedException e) {
-
-                }
-            }
+        Runnable a = () -> {
+            try {
+                sleep(50);
+                Platform.runLater(() -> selectedFlowRoot.updateLayout());
+            } catch (InterruptedException e) { }
         };
         Thread b = new Thread(a);
         b.start();
@@ -791,6 +821,6 @@ public class EditorView extends BorderPane {
         editButton.setDisable(identifier.equals("main"));
         removeButton.setDisable(identifier.equals("main"));
 
-        Platform.runLater(() -> importFlow(viewModel.getFlowNodes(), functionFlowMap.get(selectedFlow)));
+        importFlow(viewModel.getFlowNodes(), functionFlowMap.get(selectedFlow));
     }
 }
