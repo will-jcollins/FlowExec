@@ -2,12 +2,13 @@ package com.example.flowdemo.model.flow.expression;
 
 import com.example.flowdemo.model.flow.DataType;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * Model representation of a flow-chart expression with a unique identifier
  */
-public abstract class Expr {
+public abstract class Expr implements Serializable {
 
     private static int idCounter = 0; // Static ID counter, assigns unique ID to instantiated objects
 
@@ -54,5 +55,22 @@ public abstract class Expr {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    /**
+     * Retrieves the largest id value given to an expr.
+     * Necessary for loading models from a file as new expressions could otherwise be assigned ids that are already in use
+     * @return maximum id value
+     */
+    public static int getIdCounter() {
+        return idCounter;
+    }
+
+    /**
+     * Sets the largest id value given to an expr.
+     * Necessary for loading models from a file as new expressions could otherwise be assigned ids that are already in use
+     */
+    public static void setIdCounter(int id) {
+        idCounter = id;
     }
 }

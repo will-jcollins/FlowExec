@@ -117,6 +117,14 @@ public class EditorView extends BorderPane {
         toolbar.setSpacing(10);
         toolbar.setPadding(new Insets(10, 10, 10, 10));
 
+        Button saveButton = new Button("Save");
+        saveButton.setOnMouseClicked(e -> viewModel.saveModel());
+        toolbar.getChildren().add(saveButton);
+
+        Button loadButton = new Button("Load");
+        loadButton.setOnMouseClicked(e -> viewModel.loadModel());
+        toolbar.getChildren().add(loadButton);
+
         addButton = new Button("Add function");
         addButton.setOnMouseClicked(e -> addFunction());
         toolbar.getChildren().add(addButton);

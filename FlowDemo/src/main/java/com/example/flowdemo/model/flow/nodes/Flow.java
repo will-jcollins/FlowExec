@@ -4,6 +4,7 @@ import com.example.flowdemo.model.flow.DataType;
 import com.example.flowdemo.model.flow.Signature;
 import com.example.flowdemo.model.flow.expression.Expr;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -12,7 +13,7 @@ import java.util.List;
 /**
  * Represents an ordered list of flow-chart nodes
  */
-public class Flow {
+public class Flow implements Serializable {
     private Signature signature; // Typed identifier for Flow objects that represent functions
     private List<Signature> parameters; // Typed identifiers of parameters for Flow objects that represent functions
     private LinkedList<FlowNode> nodes = new LinkedList<>();

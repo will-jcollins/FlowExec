@@ -43,4 +43,21 @@ public abstract class FlowNode implements Serializable {
     public int hashCode() {
         return Objects.hash(id);
     }
+
+    /**
+     * Retrieves the largest id value given to a node.
+     * Necessary for loading models from a file as new nodes could otherwise be assigned ids that are already in use
+     * @return maximum id value
+     */
+    public static int getIdCounter() {
+        return idCounter;
+    }
+
+    /**
+     * Sets the largest id value given to a node.
+     * Necessary for loading models from a file as new nodes could otherwise be assigned ids that are already in use
+     */
+    public static void setIdCounter(int id) {
+        idCounter = id;
+    }
 }

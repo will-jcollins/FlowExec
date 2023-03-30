@@ -1,6 +1,7 @@
 package com.example.flowdemo.view.editor;
 
 import com.example.flowdemo.model.flow.DataType;
+import com.example.flowdemo.model.flow.FlowFile;
 import com.example.flowdemo.model.flow.Signature;
 import com.example.flowdemo.model.flow.expression.*;
 import com.example.flowdemo.model.flow.nodes.*;
@@ -19,11 +20,14 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.input.*;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.io.*;
 import java.util.*;
 
 public class EditorViewModel {
@@ -627,5 +631,97 @@ public class EditorViewModel {
      */
     public boolean hasIdentifier(String identifier) {
         return flowMap.keySet().contains(identifier);
+    }
+
+    /**
+     * Creates a file explorer prompt and saves the models (using serialization)
+     * to the path selected.
+     */
+    public void saveModel() {
+        // Create prompt to specify a file name and location to save models
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Flow Program");
+        // Filter so file is saved with .flow extension
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Flow program(*.flow)", "*.flow"));
+
+        // Show dialog and store returned File
+        File file = fileChooser.showSaveDialog(new Stage());
+
+        if (file != null) {
+            if (file.getName().endsWith(".flow")) {
+                try {
+                    FileOutputStream fileStream = new FileOutputStream(file);
+                    ObjectOutputStream objectStream = new ObjectOutputStream(fileStream);
+
+                    // Serialize FlowFile and save to file
+                    FlowFile fileData = new FlowFile(flowMap, FlowNode.getIdCounter(), Expr.getIdCounter());
+                    objectStream.writeObject(fileData);
+
+                    objectStream.close();
+                    fileStream.close();
+
+                    // Notify user of success
+                    Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                    successAlert.setContentText("Flow program saved successfully.");
+                    successAlert.showAndWait();
+                } catch (IOException e) {
+                    // Notify user of failure
+                    Alert failAlert = new Alert(Alert.AlertType.ERROR);
+                    failAlert.setContentText("Failed to save flow program.");
+                    failAlert.showAndWait();
+                }
+            } else {
+                // Notify user of success
+                Alert successAlert = new Alert(Alert.AlertType.ERROR);
+                successAlert.setContentText("Flow program not saved. Please use the '.flow' file extension.");
+                successAlert.showAndWait();
+            }
+        }
+    }
+
+    public void loadModel() {
+        // Create prompt to choose a file
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Load Flow Program");
+        // Filter so file is saved with .flow extension
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Flow program(*.flow)", "*.flow"));
+
+        // Show dialog and store returned File
+        File file = fileChooser.showOpenDialog(new Stage());
+
+        if (file != null) {
+            if (file.getName().endsWith(".flow")) {
+                try {
+                    FileInputStream fileStream = new FileInputStream(file);
+                    ObjectInputStream objectStream = new ObjectInputStream(fileStream);
+
+                    // Serialize Flow model map and save to file
+                    FlowFile fileData = (FlowFile) objectStream.readObject();
+                    flowMap = fileData.getFlowMap();
+                    FlowNode.setIdCounter(fileData.getMaxNodeId());
+                    Expr.setIdCounter(fileData.getMaxExprId());
+
+                    objectStream.close();
+                    fileStream.close();
+
+                    // Notify user of success
+                    Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                    successAlert.setContentText("Flow program loaded.");
+                    successAlert.showAndWait();
+                    selectModel("main");
+                    signalUpdate();
+                } catch (IOException | ClassNotFoundException | ClassCastException e) {
+                    // Notify user of failure
+                    Alert failAlert = new Alert(Alert.AlertType.ERROR);
+                    failAlert.setContentText("Failed to load flow program.");
+                    failAlert.showAndWait();
+                }
+            } else {
+                // Notify user of success
+                Alert successAlert = new Alert(Alert.AlertType.ERROR);
+                successAlert.setContentText("Invalid file format. Only files with the '.flow' extension are supported");
+                successAlert.showAndWait();
+            }
+        }
     }
 }
