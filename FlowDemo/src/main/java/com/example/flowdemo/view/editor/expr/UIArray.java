@@ -113,7 +113,7 @@ public class UIArray extends UIExpr implements UIExprContainer {
         boolean complete = true;
 
         for (int i = 0; i < exprPlaceholders.size() - 1; i++) {
-            complete = (exprPlaceholders.get(i).getExpr() == null ? false : exprPlaceholders.get(i).getExpr().isComplete());
+            complete = complete && (exprPlaceholders.get(i).getExpr() == null ? false : exprPlaceholders.get(i).getExpr().isComplete());
         }
 
         return complete;

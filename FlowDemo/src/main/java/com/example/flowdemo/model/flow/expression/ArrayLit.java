@@ -13,19 +13,27 @@ public class ArrayLit extends Expr implements ExprContainer {
 
     @Override
     public List<Expr> getExprs() {
-        return List.copyOf(elements);
+        return elements;
     }
+
+
 
     @Override
     public void setExpr(Expr expr, int branch) {
-        if (expr == null && branch >= (elements.size() - 1)) {
-            // Remove element if last element and empty
-            elements.remove(elements.size() - 1);
-        } else if (branch > elements.size() - 1) {
+        if (branch > elements.size() - 1) {
              // Make array larger if branch is out of bounds
             elements.add(expr);
         } else {
             elements.set(branch, expr);
+        }
+
+        // Make list have no trailing null values
+        for (int i = elements.size() - 1; i >= 0; i--) {
+            if (elements.get(i) == null) {
+                elements.remove(i);
+            } else {
+                break;
+            }
         }
     }
 

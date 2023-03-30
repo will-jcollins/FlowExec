@@ -705,8 +705,7 @@ public class EditorView extends BorderPane {
             // Check information is valid
             if ((!editFunctionStage.getIdentifer().equals(viewModel.getSelectedIdentifier()) && viewModel.hasIdentifier(editFunctionStage.getIdentifer())) || !matcher.find()) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setContentText("Please ensure function name is unique and well-formatted," +
-                        "function names must be camelCase starting with a letter");
+                alert.setContentText("Please ensure function name is unique and well-formatted, function names must be camelCase starting with a letter");
                 alert.showAndWait();
                 return;
             }

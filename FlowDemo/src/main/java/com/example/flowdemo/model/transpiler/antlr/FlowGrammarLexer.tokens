@@ -39,10 +39,10 @@ Not=38
 Index=39
 Size=40
 Idfr=41
-IndexNum=42
-ComponentId=43
-CharLit=44
-IntLit=45
+ComponentId=42
+IntLit=43
+IndexNum=44
+CharLit=45
 BoolLit=46
 '='=3
 'While'=4

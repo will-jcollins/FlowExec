@@ -99,8 +99,8 @@ Size        : 'SIZE';
 
 // Identifiers and Literals
 Idfr        : [a-z][a-zA-Z0-9]*;
-IndexNum       : [0-9]+;
 ComponentId : '|' [0-9]+ '|';
-CharLit     : ('\'' | '"')[a-zA-Z0-9]('\'' | '"');
 IntLit      : '0' | '-'?[1-9][0-9]*;
+IndexNum    : [0-9]+;
+CharLit     : ('\'' | '"')[a-zA-Z0-9]('\'' | '"');
 BoolLit     : 'TRUE' | 'FALSE';
