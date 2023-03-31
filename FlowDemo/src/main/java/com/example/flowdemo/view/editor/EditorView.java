@@ -175,6 +175,14 @@ public class EditorView extends BorderPane {
         toolbar.getChildren().add(editButton);
 
         Button compileButton = new Button("Compile");
+        toolbar.getChildren().add(compileButton);
+
+        ComboBox<String> compileChoice = new ComboBox<>();
+        compileChoice.getItems().add("java");
+        compileChoice.getItems().add("python");
+        compileChoice.getSelectionModel().select("java");
+        toolbar.getChildren().add(compileChoice);
+
         compileButton.setOnMouseClicked(e -> {
             boolean complete = true;
             for (UIFlow flow : functionRootMap.values()) {
@@ -182,14 +190,13 @@ public class EditorView extends BorderPane {
             }
 
             if (complete) {
-                viewModel.analyseModels();
+                viewModel.convertModel(compileChoice.getSelectionModel().getSelectedItem());
             } else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setContentText("All fields are not completed.");
                 alert.showAndWait();
             }
         });
-        toolbar.getChildren().add(compileButton);
 
         setTop(toolbar);
 
@@ -206,7 +213,9 @@ public class EditorView extends BorderPane {
         importFlow(viewModel.getFlowNodes(), selectedFlowBody);
 
         // Add listener to binding
-        updateSignal.addListener((observableValue, oldValue, newValue) -> importFlow(viewModel.getFlowNodes(), functionFlowMap.get(selectedFlow)));
+        updateSignal.addListener((observableValue, oldValue, newValue) -> {
+            importFlow(viewModel.getFlowNodes(), functionFlowMap.get(selectedFlow));
+        });
     }
 
 
@@ -262,7 +271,9 @@ public class EditorView extends BorderPane {
         Runnable a = () -> {
             try {
                 sleep(50);
-                Platform.runLater(() -> selectedFlowRoot.updateLayout());
+                Platform.runLater(() -> {
+                    selectedFlowRoot.updateLayout();
+                });
             } catch (InterruptedException e) { }
         };
         Thread b = new Thread(a);

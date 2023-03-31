@@ -1,29 +1,29 @@
 package com.example.flowdemo.model.transpiler;
 
+import com.example.flowdemo.model.flow.DataType;
+import com.example.flowdemo.model.flow.expression.Modifier;
+import com.example.flowdemo.model.flow.expression.Operator;
 import com.example.flowdemo.model.transpiler.antlr.FlowGrammarBaseVisitor;
-import com.example.flowdemo.model.transpiler.antlr.FlowGrammarLexer;
 import com.example.flowdemo.model.transpiler.antlr.FlowGrammarParser;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
-
-import java.io.IOException;
 
 public class JavaConverter extends FlowGrammarBaseVisitor<String> {
 
     private static final int INDENT_SPACES = 5;
+    private FlowGrammarAnalyser typeAnalyser = new FlowGrammarAnalyser();
 
     @Override
     public String visitProg(FlowGrammarParser.ProgContext ctx) {
+        // Populate type analyser's function table
+        typeAnalyser.visit(ctx);
+
         StringBuilder output = new StringBuilder();
 
         // Wrap in static Java class structure
-        output.append("public class Flowgram {\n");
+        output.append("import java.util.*;\n\npublic class Flowgram {\n");
 
         // Build function declarations
         for (FlowGrammarParser.DeclContext decl : ctx.funclist) {
-            output.append((visit(decl) + "\n").indent(INDENT_SPACES));
+            output.append((visit(decl) + "\n\n").indent(INDENT_SPACES));
         }
 
         output.append("}");
@@ -47,7 +47,7 @@ public class JavaConverter extends FlowGrammarBaseVisitor<String> {
             // Build parameter declarations
             String prefix = "";
             for (FlowGrammarParser.SignatureContext signature : ctx.params) {
-                output.append(visit(signature) + prefix);
+                output.append(prefix + visit(signature));
                 prefix = ", ";
             }
 
@@ -81,13 +81,23 @@ public class JavaConverter extends FlowGrammarBaseVisitor<String> {
     }
 
     @Override
+    public String visitArrayAssignStmt(FlowGrammarParser.ArrayAssignStmtContext ctx) {
+        return ctx.Idfr().getText() + "[" + visit(ctx.expr(0)) + "] = " + visit(ctx.expr(1)) + ";";
+    }
+
+    @Override
     public String visitAssignStmt(FlowGrammarParser.AssignStmtContext ctx) {
         return ctx.Idfr().getText() + " = " + visit(ctx.expr()) + ";";
     }
 
     @Override
     public String visitOutputStmt(FlowGrammarParser.OutputStmtContext ctx) {
-        return "System.out.println(" + visit(ctx.expr()) + ");";
+        DataType type = typeAnalyser.visit(ctx.expr());
+        if (type == DataType.IntArrayType || type == DataType.BoolArrayType || type == DataType.CharArrayType) {
+            return "System.out.println(Arrays.toString(" + visit(ctx.expr()) + "));";
+        } else {
+            return "System.out.println(" + visit(ctx.expr()) + ");";
+        }
     }
 
     @Override
@@ -101,8 +111,7 @@ public class JavaConverter extends FlowGrammarBaseVisitor<String> {
         // Generate parameters
         String prefix = "";
         for (FlowGrammarParser.ExprContext expr : ctx.params) {
-            output.append(prefix);
-            output.append(visit(expr));
+            output.append(prefix + visit(expr));
             prefix = ", ";
         }
 
@@ -138,12 +147,37 @@ public class JavaConverter extends FlowGrammarBaseVisitor<String> {
 
     @Override
     public String visitCharExpr(FlowGrammarParser.CharExprContext ctx) {
-        return "'" + ctx.CharLit().getText() + "'";
+        return ctx.CharLit().getText();
     }
 
     @Override
     public String visitBoolExpr(FlowGrammarParser.BoolExprContext ctx) {
         return ctx.BoolLit().getText().equals("TRUE") ? "true" : "false";
+    }
+
+    @Override
+    public String visitArrayExpr(FlowGrammarParser.ArrayExprContext ctx) {
+        StringBuilder output = new StringBuilder("new ");
+        DataType type = typeAnalyser.visit(ctx);
+
+        switch (type) {
+            case IntArrayType -> output.append("int[]");
+            case BoolArrayType -> output.append("boolean[]");
+            case CharArrayType -> output.append("char[]");
+            default -> throw new IllegalArgumentException("Logic error in JavaConverter: arrayExpr context");
+        }
+
+        output.append("{");
+        String prefix = "";
+
+        for (FlowGrammarParser.ExprContext exprCtx : ctx.expr()) {
+            output.append(prefix + visit(exprCtx));
+            prefix = ", ";
+        }
+
+        output.append("}");
+
+        return output.toString();
     }
 
     @Override
@@ -162,8 +196,7 @@ public class JavaConverter extends FlowGrammarBaseVisitor<String> {
         // Generate parameters
         String prefix = "";
         for (FlowGrammarParser.ExprContext expr : ctx.params) {
-            output.append(prefix);
-            output.append(visit(expr));
+            output.append(prefix + visit(expr));
             prefix = ", ";
         }
 
@@ -174,87 +207,99 @@ public class JavaConverter extends FlowGrammarBaseVisitor<String> {
 
     @Override
     public String visitModifierExpr(FlowGrammarParser.ModifierExprContext ctx) {
-        return visit(ctx.mod()) + visit(ctx.expr());
+        Modifier modifier = Modifier.fromString(ctx.mod().getText());
+
+        if (modifier == Modifier.Size) {
+            return visit(ctx.expr()) + visit(ctx.mod());
+        } else {
+            return visit(ctx.mod()) + visit(ctx.expr());
+        }
     }
 
     @Override
     public String visitOpExpr(FlowGrammarParser.OpExprContext ctx) {
-        return visit(ctx.expr(0)) + " " + visit(ctx.op()) + visit(ctx.expr(1));
+        Operator operator = Operator.fromString(ctx.op().getText());
+
+        if (operator == Operator.Index) {
+            return visit(ctx.expr(0)) + "[" + visit(ctx.expr(1)) + "]";
+        } else {
+            return visit(ctx.expr(0)) + " " + visit(ctx.op()) + " " + visit(ctx.expr(1));
+        }
     }
 
     @Override
     public String visitOp(FlowGrammarParser.OpContext ctx) {
-        switch (ctx.getText()) {
-            case "+":
+        Operator operator = Operator.fromString(ctx.getText());
+        switch (operator) {
+            case Add:
                 return "+";
-            case "-":
+            case Sub:
                 return "-";
-            case "/":
+            case Div:
                 return "/";
-            case "*":
+            case Mult:
                 return "*";
-            case "%":
+            case Mod:
                 return "%";
-            case "<":
+            case Less:
                 return "<";
-            case "<=":
+            case LessEq:
                 return "<=";
-            case ">":
+            case Greater:
                 return ">";
-            case ">=":
+            case GreaterEq:
                 return ">=";
-            case "EQUALS":
+            case Eq:
                 return "==";
-            case "AND":
+            case And:
                 return "&&";
-            case "OR":
+            case Or:
                 return "||";
-            case "XOR":
+            case Xor:
                 return "^";
             default:
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException("Logic error in JavaConverter: op context");
         }
     }
 
     @Override
     public String visitMod(FlowGrammarParser.ModContext ctx) {
-        switch (ctx.getText()) {
-            case "NOT":
+        Modifier modifier = Modifier.fromString(ctx.getText());
+        switch (modifier) {
+            case Not:
                 return "!";
+            case Size:
+                return ".length";
             default:
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException("Logic error in JavaConverter: mod context");
         }
     }
 
     @Override
     public String visitType(FlowGrammarParser.TypeContext ctx) {
-        switch (ctx.getText()) {
-            case "int":
+        DataType type = DataType.fromString(ctx.getText());
+        switch (type) {
+            case IntType:
                 return "int";
-            case "char":
+            case CharType:
                 return "char";
-            case "bool":
+            case BoolType:
                 return "boolean";
-            case "void":
+            case IntArrayType:
+                return "int[]";
+            case BoolArrayType:
+                return "boolean[]";
+            case CharArrayType:
+                return "char[]";
+            case VoidType:
                 return "void";
             default:
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException("Logic error in JavaConverter: type context");
         }
     }
 
     @Override
     public String visitSignature(FlowGrammarParser.SignatureContext ctx) {
         return visit(ctx.type()) + " " + ctx.Idfr().getText();
-    }
-
-    public static void main(String[] args) throws IOException {
-        CharStream input = CharStreams.fromStream(System.in);
-        FlowGrammarLexer lexer = new FlowGrammarLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        FlowGrammarParser parser = new FlowGrammarParser(tokens);
-        ParseTree tree = parser.prog();
-
-        JavaConverter converter = new JavaConverter();
-        System.out.println(converter.visit(tree));
     }
 }

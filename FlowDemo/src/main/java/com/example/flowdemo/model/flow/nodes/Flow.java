@@ -207,7 +207,7 @@ public class Flow implements Serializable {
     }
 
     /**
-     * Inserts node before node with id
+     * Inserts node after node with id
      * @param node FlowNode to be inserted
      * @param id id of node new FlowNode should be inserted before
      */
@@ -215,7 +215,7 @@ public class Flow implements Serializable {
         for (int i = 0; i < nodes.size(); i++) {
             // If node matches
             if (nodes.get(i).getId() == id) {
-                nodes.add(i, node);
+                nodes.add(i + 1, node);
                 break;
             } else if (nodes.get(i) instanceof FlowContainer container) {
                 for (Flow flow : container.getFlows()) {

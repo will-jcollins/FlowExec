@@ -99,17 +99,17 @@ public class UIWhile extends UIFlow implements UIFlowContainer, UIExprContainer 
             // Position labels
             trueLabel.setTranslateX(condition.attachBotX() + condition.getTranslateX() + 5);
             trueLabel.setTranslateY(condition.attachBotY() + condition.getTranslateY() + 5);
-            falseLabel.setTranslateX(condition.attachLeftX() + condition.getTranslateX() - falseLabel.getBoundsInLocal().getWidth());
+            falseLabel.setTranslateX(condition.attachLeftX() + condition.getTranslateX() - Math.max(exitLoopPadding,falseLabel.getBoundsInLocal().getWidth()));
             falseLabel.setTranslateY(condition.attachLeftY() + condition.getTranslateY() - falseLabel.getBoundsInLocal().getHeight());
-        }
 
-        double minTranslate = 0;
-        for (Node node : getChildren()) {
-            minTranslate = Math.min(node.getTranslateX(), minTranslate);
-        }
+            double minTranslate = 0;
+            for (Node node : getChildren()) {
+                minTranslate = Math.min(node.getTranslateX(), minTranslate);
+            }
 
-        for (Node node : getChildren()) {
-            node.setTranslateX(node.getTranslateX() + Math.abs(minTranslate));
+            for (Node node : getChildren()) {
+                node.setTranslateX(node.getTranslateX() + Math.abs(minTranslate));
+            }
         }
     }
 

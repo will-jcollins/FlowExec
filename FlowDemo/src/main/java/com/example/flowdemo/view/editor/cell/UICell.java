@@ -22,8 +22,6 @@ public abstract class UICell extends Group {
         Rectangle debug = new Rectangle();
         debug.setFill(Color.TRANSPARENT);
         debug.setStroke(Color.BLACK);
-
-        getChildren().add(debug);
     }
 
     /**

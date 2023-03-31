@@ -7,6 +7,8 @@ import com.example.flowdemo.model.flow.expression.*;
 import com.example.flowdemo.model.flow.nodes.*;
 import com.example.flowdemo.model.transpiler.FlowException;
 import com.example.flowdemo.model.transpiler.FlowGrammarAnalyser;
+import com.example.flowdemo.model.transpiler.JavaConverter;
+import com.example.flowdemo.model.transpiler.PythonConverter;
 import com.example.flowdemo.model.transpiler.antlr.FlowGrammarLexer;
 import com.example.flowdemo.model.transpiler.antlr.FlowGrammarParser;
 import com.example.flowdemo.view.editor.cell.CellPlaceholder;
@@ -574,17 +576,16 @@ public class EditorViewModel {
     }
 
     /**
-     * Parses and analyses all models that exist in the system
+     * Parses, analyses, and converts all models that exist in the system
      * Also updates the getError() method to return any semantic errors found
+     * @param language name of the language to convert models to
      */
-    public void analyseModels() {
+    public void convertModel(String language) {
         // Build flow-language code from models
         StringBuilder source = new StringBuilder();
         for (Flow flow : flowMap.values()) {
             source.append(flow.toFunctionCode());
         }
-
-        System.out.println(source); // TODO Testing, remove in final build
 
         ParseTree tree;
 
@@ -614,6 +615,56 @@ public class EditorViewModel {
             Alert alert = new Alert(Alert.AlertType.ERROR, e.getMessage(), ButtonType.CLOSE);
             alert.showAndWait();
             signalUpdate();
+            return;
+        }
+
+        String extension = (language.equals("python") ? "py" : language);
+
+        // Show dialog for choosing file location
+        // Create prompt to specify a file name and location to save models
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save " + language + " source code");
+        // Filter so file is saved with .flow extension
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(language + "source code(*." + extension + ")", "*." + extension));
+
+        // Show dialog and store returned File
+        File file = fileChooser.showSaveDialog(new Stage());
+
+        if (file != null) {
+            if (file.getName().endsWith("." + extension)) {
+                try {
+                    // Convert AST to source code
+                    String sourceCode;
+                    if (language.equals("java")) {
+                        JavaConverter javaConverter = new JavaConverter();
+                        sourceCode = javaConverter.visit(tree);
+                    } else {
+                        PythonConverter pythonConverter = new PythonConverter();
+                        sourceCode = pythonConverter.visit(tree);
+                    }
+
+                    // Print java source code to file
+                    PrintWriter fileStream = new PrintWriter(file);
+                    fileStream.print(sourceCode);
+
+                    fileStream.close();
+
+                    // Notify user of success
+                    Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                    successAlert.setContentText("Source code saved succesfully.");
+                    successAlert.showAndWait();
+                } catch (IOException e) {
+                    // Notify user of failure
+                    Alert failAlert = new Alert(Alert.AlertType.ERROR);
+                    failAlert.setContentText("Failed to save source code.");
+                    failAlert.showAndWait();
+                }
+            } else {
+                // Notify user of success
+                Alert successAlert = new Alert(Alert.AlertType.ERROR);
+                successAlert.setContentText("Source code not saved. Please use the '." + extension + "' file extension.");
+                successAlert.showAndWait();
+            }
         }
     }
 
