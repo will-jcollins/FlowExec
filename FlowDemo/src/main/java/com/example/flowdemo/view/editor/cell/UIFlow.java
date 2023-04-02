@@ -153,23 +153,15 @@ public class UIFlow extends UICell {
         }
 
         // Ensure all cells' setTranslateX is positive (ensures correct positioning in child classes)
-        double minTranslate = 0;
-        for (Node node : getChildren()) {
-            minTranslate = Math.min(node.getTranslateX(), minTranslate);
-        }
-
-        minTranslate = Math.abs(minTranslate);
-
-        for (Node node : getChildren()) {
-            node.setTranslateX(node.getTranslateX() + minTranslate);
-        }
-
-//
-//        for (UICell cell : cells) {
-//            cell.setTranslateX(cell.getTranslateX() + minTranslate);
+//        double minTranslate = 0;
+//        for (Node node : getChildren()) {
+//            minTranslate = Math.min(node.getTranslateX(), minTranslate);
 //        }
-//        for (PolylineArrow line : lines) {
-//            line.setTranslateX(line.getTranslateX() + minTranslate);
+//
+//        minTranslate = Math.abs(minTranslate);
+//
+//        for (Node node : getChildren()) {
+//            node.setTranslateX(node.getTranslateX() + minTranslate);
 //        }
     }
 

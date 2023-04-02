@@ -4,7 +4,9 @@ import com.example.flowdemo.view.editor.PolylineArrow;
 import com.example.flowdemo.view.editor.expr.ExprPlaceholder;
 import com.example.flowdemo.view.editor.expr.UIExprContainer;
 import javafx.scene.control.Label;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Polyline;
+import javafx.scene.shape.Rectangle;
 
 import java.util.Arrays;
 import java.util.List;
