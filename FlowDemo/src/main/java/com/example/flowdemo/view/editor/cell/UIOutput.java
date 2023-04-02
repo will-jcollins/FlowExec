@@ -10,14 +10,14 @@ import java.util.List;
 
 
 public class UIOutput extends UICell implements UIExprContainer {
-
+    private StackPane root; // Root node
     private ExprPlaceholder exprPlaceholder;
     private Polygon parallelogram;
 
     public UIOutput(int cellID) {
         super(cellID);
 
-        StackPane root = new StackPane();
+        root = new StackPane();
         getChildren().add(root);
 
         exprPlaceholder = new ExprPlaceholder(cellID, 0);
@@ -76,8 +76,8 @@ public class UIOutput extends UICell implements UIExprContainer {
     @Override
     public void updateLayout() {
         // Update polygon size to fully accommodate size of expr
-        double width = exprPlaceholder.getWidth() + INSET * 2;
-        double height = exprPlaceholder.getHeight() + INSET;
+        double width = (root.getChildren().contains(getPseudoLabel()) ? getPseudoLabel().getWidth() : exprPlaceholder.getWidth()) + INSET * 2;
+        double height = (root.getChildren().contains(getPseudoLabel()) ? getPseudoLabel().getHeight() : exprPlaceholder.getHeight()) + INSET;
         parallelogram.getPoints().remove(0,parallelogram.getPoints().size());
         parallelogram.getPoints().addAll(
                 INSET / 2,    0d,
@@ -86,6 +86,24 @@ public class UIOutput extends UICell implements UIExprContainer {
                 0d,                 height,
                 INSET / 2,         0d
         );
+    }
+
+    @Override
+    public void setPseudoVisible(boolean visible) {
+        if (visible && !root.getChildren().contains(getPseudoLabel())) {
+            // Remove input fields
+            root.getChildren().remove(exprPlaceholder);
+
+            // Add pseudocode label
+            getPseudoLabel().setText("Output: " + exprPlaceholder.getPseudoLabel());
+            root.getChildren().add(getPseudoLabel());
+        } else if (!visible && !root.getChildren().contains(exprPlaceholder)) {
+            // Add input fields
+            root.getChildren().add(exprPlaceholder);
+
+            // Remove pseudocode label
+            root.getChildren().remove(getPseudoLabel());
+        }
     }
 
     @Override

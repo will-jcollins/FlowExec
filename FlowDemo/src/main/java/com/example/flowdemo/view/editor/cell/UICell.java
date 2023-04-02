@@ -2,6 +2,7 @@ package com.example.flowdemo.view.editor.cell;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.scene.Group;
+import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
@@ -15,13 +16,10 @@ public abstract class UICell extends Group {
     public static int IRRELEVANT_ID = -1; // ID for cells that do not directly relate to a model
     protected static double INSET = 20.0d; // Value cells space elements by
     private final int cellID; // ID of the FlowNode the cell represents
+    private Label pseudoLabel = new Label();
 
     public UICell(int cellID) {
         this.cellID = cellID;
-
-        Rectangle debug = new Rectangle();
-        debug.setFill(Color.TRANSPARENT);
-        debug.setStroke(Color.BLACK);
     }
 
     /**
@@ -103,11 +101,6 @@ public abstract class UICell extends Group {
     }
 
     /**
-     * Resizes and repositions elements within the cell to be correct
-     */
-    public abstract void updateLayout();
-
-    /**
      * Replaces the CSS style class to input string
      * @param styleClass new style class
      */
@@ -117,8 +110,29 @@ public abstract class UICell extends Group {
     }
 
     /**
+     * Getter for pseudocode label
+     * @return pseudocode label
+     */
+    public Label getPseudoLabel() {
+        return pseudoLabel;
+    }
+
+    /**
+     * Sets pseudocode labels visibility
+     * @param visible whether pseudocode labels should be visible
+     */
+    public void setPseudoVisible(boolean visible) {
+
+    }
+
+    /**
      * Indicates if a cell has all its information completed
      * @return boolean
      */
     public abstract boolean isComplete();
+
+    /**
+     * Resizes and repositions elements within the cell to be correct
+     */
+    public abstract void updateLayout();
 }

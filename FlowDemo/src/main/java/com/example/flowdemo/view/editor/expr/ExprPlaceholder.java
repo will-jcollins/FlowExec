@@ -72,6 +72,11 @@ public class ExprPlaceholder extends UIExpr {
     }
 
     @Override
+    public String getPseudoLabel() {
+        return (expr != null ? expr.getPseudoLabel() : "");
+    }
+
+    @Override
     public boolean isComplete() {
         return true;
     }

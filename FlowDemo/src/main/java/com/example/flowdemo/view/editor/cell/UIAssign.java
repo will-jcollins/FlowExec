@@ -19,9 +19,10 @@ import java.util.regex.Pattern;
  * Visual representation of an AssignNode in the Flow model
  */
 public class UIAssign extends UICell implements UIExprContainer {
+    protected StackPane root; // Root node
 
     protected Rectangle back; // Backing rectangle
-    private TextField indexField; // Input for variable name
+    private TextField varName; // Input for variable name
     private Label equals;
     protected HBox row; // Container for input elements
     private ExprPlaceholder value; // Expression input
@@ -30,7 +31,7 @@ public class UIAssign extends UICell implements UIExprContainer {
         super(cellID);
 
         // Create root node
-        StackPane root = new StackPane();
+        root = new StackPane();
         root.setAlignment(Pos.CENTER);
         getChildren().add(root);
 
@@ -40,17 +41,17 @@ public class UIAssign extends UICell implements UIExprContainer {
         row.setSpacing(10.0d);
 
         // Create textField for variable identifier
-        indexField = new TextField();
-        indexField.setPrefWidth(100.0d);
-        indexField.setPromptText("Variable Name");
-        indexField.textProperty().addListener((observableValue, oldVal, newVal) -> {
+        varName = new TextField();
+        varName.setPrefWidth(100.0d);
+        varName.setPromptText("Variable Name");
+        varName.textProperty().addListener((observableValue, oldVal, newVal) -> {
             Pattern idfrPattern = Pattern.compile("([a-z][a-zA-Z0-9]*)?");
             Matcher matcher = idfrPattern.matcher(newVal);
             if (!matcher.find()) {
-                indexField.setText(oldVal);
+                varName.setText(oldVal);
             }
         });
-        row.getChildren().add(indexField);
+        row.getChildren().add(varName);
 
         equals = new Label("=");
         row.getChildren().add(equals);
@@ -63,7 +64,7 @@ public class UIAssign extends UICell implements UIExprContainer {
 
         // Create background rectangle
         back = new Rectangle(
-                indexField.getPrefWidth() + equals.getWidth() + value.getWidth() + INSET + 2 * row.getSpacing(),
+                varName.getPrefWidth() + equals.getWidth() + value.getWidth() + INSET + 2 * row.getSpacing(),
                 value.getHeight() + INSET, Color.WHITE
         );
         root.getChildren().add(back);
@@ -76,7 +77,7 @@ public class UIAssign extends UICell implements UIExprContainer {
      * @return TextField for variable identifier
      */
     public TextField getVarName() {
-        return indexField;
+        return varName;
     }
 
     @Override
@@ -106,8 +107,32 @@ public class UIAssign extends UICell implements UIExprContainer {
 
     @Override
     public void updateLayout() {
-        back.setWidth(indexField.getPrefWidth() + equals.getWidth() + value.getWidth() + INSET + 2 * row.getSpacing());
-        back.setHeight(value.getHeight() + INSET);
+        if (!root.getChildren().contains(getPseudoLabel())) {
+            back.setWidth(varName.getPrefWidth() + equals.getWidth() + value.getWidth() + INSET + 2 * row.getSpacing());
+            back.setHeight(value.getHeight() + INSET);
+        } else {
+            back.setWidth(getPseudoLabel().getBoundsInLocal().getWidth() + INSET * 2);
+            back.setHeight(getPseudoLabel().getBoundsInLocal().getHeight() + INSET);
+        }
+
+    }
+
+    @Override
+    public void setPseudoVisible(boolean visible) {
+        if (visible && !root.getChildren().contains(getPseudoLabel())) {
+            // Remove input fields
+            root.getChildren().remove(row);
+
+            // Add pseudocode label
+            getPseudoLabel().setText("Set " + varName.getText() + " to " + value.getPseudoLabel());
+            root.getChildren().add(getPseudoLabel());
+        } else if (!visible && !root.getChildren().contains(row)) {
+            // Add input fields
+            root.getChildren().add(row);
+
+            // Remove pseudocode label
+            root.getChildren().remove(getPseudoLabel());
+        }
     }
 
     @Override
@@ -118,6 +143,6 @@ public class UIAssign extends UICell implements UIExprContainer {
 
     @Override
     public boolean isComplete() {
-        return !indexField.getText().equals("") && (value.getExpr() != null ? value.getExpr().isComplete() : false);
+        return !varName.getText().equals("") && (value.getExpr() != null ? value.getExpr().isComplete() : false);
     }
 }

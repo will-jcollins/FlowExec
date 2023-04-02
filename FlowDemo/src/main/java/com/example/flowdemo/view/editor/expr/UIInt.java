@@ -50,6 +50,11 @@ public class UIInt extends UIExpr {
     }
 
     @Override
+    public String getPseudoLabel() {
+        return field.getText();
+    }
+
+    @Override
     public boolean isComplete() {
         return !field.getText().equals("");
     }

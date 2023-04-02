@@ -41,6 +41,10 @@ public abstract class UIExpr extends Group {
         return getBoundsInLocal().getHeight();
     }
 
+    public String getPseudoLabel() {
+        return "";
+    }
+
     public abstract boolean isComplete();
 
 

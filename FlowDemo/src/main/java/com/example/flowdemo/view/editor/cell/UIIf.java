@@ -124,13 +124,20 @@ public class UIIf extends UIFlow implements UIFlowContainer, UIExprContainer {
     }
 
     @Override
+    public void setPseudoVisible(boolean visible) {
+        ifFlow.setPseudoVisible(visible);
+        elseFlow.setPseudoVisible(visible);
+        condition.setPseudoVisible(visible);
+    }
+
+    @Override
     public void setStyleClass(String styleClass) {
         condition.setStyleClass(styleClass);
-        enterIfLine.setStyleClass(styleClass);
-        exitIfLine.setStyleClass(styleClass);
-
-        exitElseLine.getStyleClass().clear();
-        exitElseLine.getStyleClass().add(styleClass + CSS_LINE_CLASS);
+//        enterIfLine.setStyleClass(styleClass);
+//        exitIfLine.setStyleClass(styleClass);
+//
+//        exitElseLine.getStyleClass().clear();
+//        exitElseLine.getStyleClass().add(styleClass + CSS_LINE_CLASS);
     }
 
     @Override

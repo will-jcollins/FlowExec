@@ -94,6 +94,22 @@ public class UICallExpr extends UIExpr implements UIExprContainer {
     }
 
     @Override
+    public String getPseudoLabel() {
+        // Build pseudocode
+        StringBuilder pseudoCode = new StringBuilder((idfrBox.getSelectionModel().getSelectedItem() == null ? "" : idfrBox.getSelectionModel().getSelectedItem()) + "(");
+
+        // Add parameters
+        String prefix = "";
+        for (ExprPlaceholder placeholder : exprPlaceholders) {
+            pseudoCode.append(prefix + placeholder.getPseudoLabel());
+            prefix = ", ";
+        }
+        pseudoCode.append(")");
+
+        return pseudoCode.toString();
+    }
+
+    @Override
     public List<ExprPlaceholder> getExprPlaceholders() {
         return exprPlaceholders;
     }

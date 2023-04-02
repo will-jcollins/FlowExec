@@ -68,6 +68,10 @@
     -fx-background-radius: 3px, 3px, 2px, 1px;
 }
 
+.label:disabled {
+
+}
+
 .tab-pane .tab-header-area .tab-header-background {
     -fx-background-color: WHITE;
 }

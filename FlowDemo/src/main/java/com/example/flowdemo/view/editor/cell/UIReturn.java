@@ -10,14 +10,14 @@ import java.util.Arrays;
 import java.util.List;
 
 public class UIReturn extends UICell implements UIExprContainer {
-
+    private StackPane root; // Root node
     private Rectangle back;
     private ExprPlaceholder placeholder;
 
     public UIReturn(int cellID) {
         super(cellID);
 
-        StackPane root = new StackPane();
+        root = new StackPane();
         getChildren().add(root);
 
         back = new Rectangle();
@@ -82,10 +82,28 @@ public class UIReturn extends UICell implements UIExprContainer {
 
     @Override
     public void updateLayout() {
-        double width = placeholder.getWidth() + INSET;
-        double height = placeholder.getHeight() + INSET;
+        double width = (root.getChildren().contains(getPseudoLabel()) ? getPseudoLabel().getWidth() : placeholder.getWidth()) + INSET;
+        double height = (root.getChildren().contains(getPseudoLabel()) ? getPseudoLabel().getHeight() : placeholder.getHeight()) + INSET;
         back.setWidth(width);
         back.setHeight(height);
+    }
+
+    @Override
+    public void setPseudoVisible(boolean visible) {
+        if (visible && !root.getChildren().contains(getPseudoLabel())) {
+            // Remove input fields
+            root.getChildren().remove(placeholder);
+
+            // Add pseudocode label
+            getPseudoLabel().setText("Return " + placeholder.getPseudoLabel());
+            root.getChildren().add(getPseudoLabel());
+        } else if (!visible && !root.getChildren().contains(placeholder)) {
+            // Add input fields
+            root.getChildren().add(placeholder);
+
+            // Remove pseudocode label
+            root.getChildren().remove(getPseudoLabel());
+        }
     }
 
     @Override

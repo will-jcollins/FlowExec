@@ -357,10 +357,6 @@ public class EditorViewModel {
         }
     }
 
-    public void testHandler() {
-        System.out.println(selectedModel.toFunctionCode());
-    }
-
     public void updateOpExpr(OpExpr opExpr, String value) {
         opExpr.setOp(Operator.fromString(value));
     }

@@ -41,6 +41,7 @@ public class EditorView extends BorderPane {
     private String selectedFlow; // String key for the UIFlow that is currently visible
     private UIFlow selectedFlowRoot; // UIFlow mapped in functionRootMap that has selectedFlow as its key
     private UIFlow selectedFlowBody; // UIFlow mapped in functionFlowMap that has selectedFlow as its key
+    private boolean pseudoVisible = false; // Indicates if flow-chart shows input widgets or pseudocode
     private TabPane editorRoot; // ViewPort for the flow-chart editor window
     private Text functionDescription; // Label that describes the flow-chart currently visible
 
@@ -70,6 +71,8 @@ public class EditorView extends BorderPane {
         Tab mainTab = new Tab("main", mainView);
         editorRoot.getTabs().add(mainTab);
         editorRoot.getSelectionModel().select(mainTab);
+
+        // Add listener for change to tab
         editorRoot.getSelectionModel().selectedItemProperty().addListener(e -> {
             if (editorRoot.getSelectionModel().getSelectedItem() != null) {
                 selectFlow(editorRoot.getSelectionModel().getSelectedItem().getText());
@@ -174,6 +177,23 @@ public class EditorView extends BorderPane {
         editButton.setOnMouseClicked(e -> editFunction());
         toolbar.getChildren().add(editButton);
 
+        Button pseudoCodeButton = new Button("Show Pseudocode");
+        pseudoCodeButton.setOnMouseClicked(e -> {
+            // Swap visibility
+            pseudoVisible = !pseudoVisible;
+
+            // Update button label
+            if (pseudoVisible) {
+                pseudoCodeButton.setText("Hide Pseudocode");
+            } else {
+                pseudoCodeButton.setText("Show Pseudocode");
+            }
+
+            update();
+
+        });
+        toolbar.getChildren().add(pseudoCodeButton);
+
         Button compileButton = new Button("Compile");
         toolbar.getChildren().add(compileButton);
 
@@ -209,13 +229,25 @@ public class EditorView extends BorderPane {
         // Select main as the currently visible Flow-Chart (only one that should currently exist)
         selectFlow("main");
 
-        // Update to reflect model
-        importFlow(viewModel.getFlowNodes(), selectedFlowBody);
-
         // Add listener to binding
-        updateSignal.addListener((observableValue, oldValue, newValue) -> {
-            importFlow(viewModel.getFlowNodes(), functionFlowMap.get(selectedFlow));
-        });
+        updateSignal.addListener((observableValue, oldValue, newValue) -> update());
+    }
+
+    public void update() {
+        importFlow(viewModel.getFlowNodes(), functionFlowMap.get(selectedFlow));
+        selectedFlowRoot.setPseudoVisible(pseudoVisible);
+
+        // Reflect changes outside the UI thread to prevent blocking
+        Runnable a = () -> {
+            try {
+                sleep(50);
+                Platform.runLater(() -> {
+                    selectedFlowRoot.updateLayout();
+                });
+            } catch (InterruptedException e) { }
+        };
+        Thread b = new Thread(a);
+        b.start();
     }
 
 
@@ -266,18 +298,6 @@ public class EditorView extends BorderPane {
                 cellIndex += 1;
             }
         }
-
-        // Reflect changes outside the UI thread to prevent blocking
-        Runnable a = () -> {
-            try {
-                sleep(50);
-                Platform.runLater(() -> {
-                    selectedFlowRoot.updateLayout();
-                });
-            } catch (InterruptedException e) { }
-        };
-        Thread b = new Thread(a);
-        b.start();
     }
 
     private UICell generateCell(FlowNode in) {
@@ -832,6 +852,6 @@ public class EditorView extends BorderPane {
         editButton.setDisable(identifier.equals("main"));
         removeButton.setDisable(identifier.equals("main"));
 
-        importFlow(viewModel.getFlowNodes(), functionFlowMap.get(selectedFlow));
+        update();
     }
 }

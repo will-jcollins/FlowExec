@@ -36,7 +36,27 @@ public class UIAssignArray extends UIAssign {
     @Override
     public void updateLayout() {
         super.updateLayout();
-        back.setWidth(back.getWidth() + row.getSpacing() * 3 + indexExpr.getWidth() + closeLabel.getWidth() + openLabel.getWidth());
+        if (!root.getChildren().contains(getPseudoLabel())) {
+            back.setWidth(back.getWidth() + row.getSpacing() * 3 + indexExpr.getWidth() + closeLabel.getWidth() + openLabel.getWidth());
+        }
+    }
+
+    @Override
+    public void setPseudoVisible(boolean visible) {
+        if (visible && !root.getChildren().contains(getPseudoLabel())) {
+            // Remove input fields
+            root.getChildren().remove(row);
+
+            // Add pseudocode label
+            getPseudoLabel().setText("Set " + getVarName().getText() + "[ " + indexExpr.getPseudoLabel() + "]" + " to " + super.getExprPlaceholders().get(0).getPseudoLabel());
+            root.getChildren().add(getPseudoLabel());
+        } else if (!visible && !root.getChildren().contains(row)) {
+            // Add input fields
+            root.getChildren().add(row);
+
+            // Remove pseudocode label
+            root.getChildren().remove(getPseudoLabel());
+        }
     }
 
     @Override

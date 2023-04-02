@@ -67,6 +67,11 @@ public class UIModifierExpr extends UIExpr implements UIExprContainer {
     }
 
     @Override
+    public String getPseudoLabel() {
+        return (modifier.getSelectionModel().getSelectedItem() != null ? modifier.getSelectionModel().getSelectedItem() : "") + " " + expr.getPseudoLabel();
+    }
+
+    @Override
     public List<ExprPlaceholder> getExprPlaceholders() {
         return Arrays.asList(expr);
     }

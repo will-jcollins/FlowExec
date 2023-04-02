@@ -51,6 +51,11 @@ public class UIBool extends UIExpr {
     }
 
     @Override
+    public String getPseudoLabel() {
+        return (comboBox.getSelectionModel().getSelectedItem() != null ? comboBox.getSelectionModel().getSelectedItem() : "");
+    }
+
+    @Override
     public boolean isComplete() {
         return !comboBox.getSelectionModel().getSelectedItem().equals("");
     }

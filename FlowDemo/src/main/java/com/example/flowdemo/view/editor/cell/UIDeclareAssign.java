@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
  * Visual representation of a DeclareAssignNode in the Flow model
  */
 public class UIDeclareAssign extends UICell implements UIExprContainer {
-
+    private StackPane root; // Root node
     private Rectangle back; // Backing rectangle
     private ExprPlaceholder value; // Expression input
     private ComboBox<String> types; // List of choices of data types
@@ -34,7 +34,7 @@ public class UIDeclareAssign extends UICell implements UIExprContainer {
         super(cellID);
 
         // Create root node
-        StackPane root = new StackPane();
+        root = new StackPane();
         root.setAlignment(Pos.CENTER);
         getChildren().add(root);
 
@@ -118,8 +118,33 @@ public class UIDeclareAssign extends UICell implements UIExprContainer {
 
     @Override
     public void updateLayout() {
-        back.setWidth(varName.getPrefWidth() + equals.getWidth() + value.getWidth() + types.getPrefWidth() + INSET + 3 * row.getSpacing());
-        back.setHeight(value.getHeight() + INSET);
+        if (!root.getChildren().contains(getPseudoLabel())) {
+            back.setWidth(types.getPrefWidth() + varName.getPrefWidth() + equals.getWidth() + value.getWidth() + INSET + 3 * row.getSpacing());
+            back.setHeight(value.getHeight() + INSET);
+        } else {
+            back.setWidth(getPseudoLabel().getWidth() + INSET * 2);
+            back.setHeight(getPseudoLabel().getHeight() + INSET);
+        }
+    }
+
+    @Override
+    public void setPseudoVisible(boolean visible) {
+        if (visible && !root.getChildren().contains(getPseudoLabel())) {
+            // Remove input fields
+            root.getChildren().remove(row);
+
+            String type = types.getSelectionModel().getSelectedItem() == null ? "" : types.getSelectionModel().getSelectedItem();
+
+            // Add pseudocode label
+            getPseudoLabel().setText("Declare " + varName.getText() + " as " + type + " and set to " + value.getPseudoLabel());
+            root.getChildren().add(getPseudoLabel());
+        } else if (!visible && !root.getChildren().contains(row)) {
+            // Add input fields
+            root.getChildren().add(row);
+
+            // Remove pseudocode label
+            root.getChildren().remove(getPseudoLabel());
+        }
     }
 
     @Override

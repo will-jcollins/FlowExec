@@ -11,7 +11,7 @@ import javafx.scene.shape.Polygon;
  * Visual representation of a flow-chart conditional branch
  */
 public class UIDiamond extends UICell {
-
+    private StackPane root; // Root node
     private ExprPlaceholder exprPlaceholder; // Expression input for condition
     private Polygon back; // Diamond polygon
 
@@ -19,7 +19,7 @@ public class UIDiamond extends UICell {
         super(cellID);
 
         // Define root node to center child nodes on
-        StackPane root = new StackPane();
+        root = new StackPane();
         root.setAlignment(Pos.CENTER);
         getChildren().add(root);
 
@@ -48,7 +48,7 @@ public class UIDiamond extends UICell {
     @Override
     public void updateLayout() {
         // Update polygon size to fully accommodate size of expr
-        double size = exprPlaceholder.getWidth() + INSET * 3;
+        double size = (root.getChildren().contains(getPseudoLabel()) ? getPseudoLabel().getWidth() : exprPlaceholder.getWidth()) + INSET * 3;
         back.getPoints().remove(0,back.getPoints().size());
         back.getPoints().addAll(
                 size / 2, 0.0d,
@@ -56,6 +56,25 @@ public class UIDiamond extends UICell {
                 size / 2, size,
                 0.0d, size / 2,
                 size / 2, 0.0d);
+    }
+
+
+    @Override
+    public void setPseudoVisible(boolean visible) {
+        if (visible && !root.getChildren().contains(getPseudoLabel())) {
+            // Remove input fields
+            root.getChildren().remove(exprPlaceholder);
+
+            // Add pseudocode label
+            getPseudoLabel().setText("Is " + exprPlaceholder.getPseudoLabel() + " true?");
+            root.getChildren().add(getPseudoLabel());
+        } else if (!visible && !root.getChildren().contains(exprPlaceholder)) {
+            // Add input fields
+            root.getChildren().add(exprPlaceholder);
+
+            // Remove pseudocode label
+            root.getChildren().remove(getPseudoLabel());
+        }
     }
 
     @Override

@@ -39,11 +39,8 @@ public class UIOpExpr extends UIExpr implements UIExprContainer {
         }
         operator.getItems().addAll(options);
 
-        // Activate mouse target to allow for draggable textfield
+        // Activate mouse target to allow for draggable ComboBox
         row.getChildren().add(operator);
-//        getMouseTarget().toFront();
-//        setOnMouseClicked(e -> operator.show());
-
         row.getChildren().add(0, left);
         row.getChildren().add(right);
     }
@@ -68,6 +65,11 @@ public class UIOpExpr extends UIExpr implements UIExprContainer {
     @Override
     public double getHeight() {
         return left != null && right != null ? Math.max(left.getHeight(), Math.max(right.getHeight(), operator.getMaxHeight())) : row.getHeight();
+    }
+
+    @Override
+    public String getPseudoLabel() {
+        return "(" + left.getPseudoLabel() + " " + (operator.getSelectionModel().getSelectedItem() != null ? operator.getSelectionModel().getSelectedItem() : "") + " " + right.getPseudoLabel() + ")";
     }
 
     @Override

@@ -43,12 +43,12 @@ public class UIWhile extends UIFlow implements UIFlowContainer, UIExprContainer 
 
     @Override
     public double attachBotX() {
-        return condition.getTranslateX() - INSET - Math.max(0, condition.getTranslateX() - bodyFlow.getTranslateX());
+        return Math.min(condition.getTranslateX(), bodyFlow.getTranslateX());
     }
 
     @Override
     public double attachBotY() {
-        return bodyFlow.getTranslateY() + bodyFlow.attachBotY() + CELL_PADDING / 2;
+        return bodyFlow.getTranslateY() + bodyFlow.attachBotY() + CELL_PADDING;
     }
 
     @Override
@@ -68,58 +68,51 @@ public class UIWhile extends UIFlow implements UIFlowContainer, UIExprContainer 
             bodyFlow.updateLayout();
             super.updateLayout();
 
-            // Add loop flowlines
-            double exitBodyPadding = INSET + Math.max(bodyFlow.attachRightX() - bodyFlow.attachBotX(), condition.getTranslateX() + condition.attachRightX() - (bodyFlow.getTranslateX() + bodyFlow.attachBotX())); // Space between line leading out of loop body into condition and body flow
-            ObservableList<String> styleClass = exitLoop != null ? exitLoop.getStyleClass() : new SimpleListProperty<>();
+            // Add line leading from bodyFLow to condition
             getChildren().remove(exitBody);
+            double maxPoint = Math.max(condition.getTranslateX() + condition.getWidth(), bodyFlow.getTranslateX() + bodyFlow.getWidth());
             exitBody = new PolylineArrow(new Double[]{
-                    super.attachBotX(), super.attachBotY(),
-                    super.attachBotX(), super.attachBotY() + CELL_PADDING / 2,
-                    super.attachBotX() + exitBodyPadding, super.attachBotY() + CELL_PADDING / 2,
-                    super.attachBotX() + exitBodyPadding, condition.getTranslateY() + condition.attachRightY(),
-                    condition.getTranslateX() + condition.attachRightX(), condition.getTranslateY() + condition.attachRightY(),
+                bodyFlow.getTranslateX() + bodyFlow.attachBotX(), bodyFlow.getTranslateY() + bodyFlow.attachBotY(),
+                bodyFlow.getTranslateX() + bodyFlow.attachBotX(), bodyFlow.getTranslateY() + bodyFlow.attachBotY() + CELL_PADDING / 2,
+                maxPoint, bodyFlow.getTranslateY() + bodyFlow.attachBotY() + CELL_PADDING / 2,
+                maxPoint, condition.getTranslateY() + condition.attachRightY(),
+                condition.getTranslateX() + condition.attachRightX(), condition.getTranslateY() + condition.attachRightY()
             });
-            exitBody.getStyleClass().addAll(styleClass);
             getChildren().add(exitBody);
 
-
-            styleClass = exitLoop != null ? exitLoop.getStyleClass() : new SimpleListProperty<>();
+            // Add line leading from condition to next FlowNode
             getChildren().remove(exitLoop);
-
-            double exitLoopPadding = INSET + Math.max(0, condition.getTranslateX() - bodyFlow.getTranslateX());
+            double minPoint = Math.min(condition.getTranslateX(), bodyFlow.getTranslateX());
             exitLoop = new Polyline();
-            exitLoop.getStyleClass().addAll(styleClass);
+            exitLoop.getStyleClass().add("default-line");
             exitLoop.getPoints().addAll(
-                    condition.getTranslateX() + condition.attachLeftX(), condition.getTranslateY() + condition.attachLeftY(),
-                    condition.getTranslateX() + condition.attachLeftX() - exitLoopPadding, condition.getTranslateY() + condition.attachLeftY(),
-                    condition.getTranslateX() + condition.attachLeftX() - exitLoopPadding, bodyFlow.getTranslateY() + bodyFlow.attachBotY() + CELL_PADDING / 2);
+                condition.getTranslateX(), condition.getTranslateY() + condition.attachLeftY(),
+                    minPoint, condition.getTranslateY() + condition.attachLeftY(),
+                    minPoint, bodyFlow.getTranslateY() + bodyFlow.attachBotY() + CELL_PADDING
+            );
             getChildren().add(exitLoop);
-
 
             // Position labels
             trueLabel.setTranslateX(condition.attachBotX() + condition.getTranslateX() + 5);
             trueLabel.setTranslateY(condition.attachBotY() + condition.getTranslateY() + 5);
-            falseLabel.setTranslateX(condition.attachLeftX() + condition.getTranslateX() - Math.max(exitLoopPadding,falseLabel.getBoundsInLocal().getWidth()));
+            falseLabel.setTranslateX(condition.attachLeftX() + condition.getTranslateX() - falseLabel.getBoundsInLocal().getWidth());
             falseLabel.setTranslateY(condition.attachLeftY() + condition.getTranslateY() - falseLabel.getBoundsInLocal().getHeight());
-
-            double minTranslate = 0;
-            for (Node node : getChildren()) {
-                minTranslate = Math.min(node.getTranslateX(), minTranslate);
-            }
-
-            for (Node node : getChildren()) {
-                node.setTranslateX(node.getTranslateX() + Math.abs(minTranslate));
-            }
         }
+    }
+
+    @Override
+    public void setPseudoVisible(boolean visible) {
+        condition.setPseudoVisible(visible);
+        bodyFlow.setPseudoVisible(visible);
     }
 
     @Override
     public void setStyleClass(String styleClass) {
         condition.setStyleClass(styleClass);
-        exitBody.setStyleClass(styleClass);
+//        exitBody.setStyleClass(styleClass);
 
-        exitLoop.getStyleClass().clear();
-        exitLoop.getStyleClass().add(styleClass + CSS_LINE_CLASS);
+//        exitLoop.getStyleClass().clear();
+//        exitLoop.getStyleClass().add(styleClass + CSS_LINE_CLASS);
     }
 
     @Override

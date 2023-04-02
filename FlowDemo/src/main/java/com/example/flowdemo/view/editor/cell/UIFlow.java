@@ -3,6 +3,7 @@ package com.example.flowdemo.view.editor.cell;
 import com.example.flowdemo.view.editor.PolylineArrow;
 import com.example.flowdemo.view.editor.EditorViewModel;
 import javafx.beans.property.BooleanProperty;
+import javafx.scene.Node;
 import javafx.scene.input.TransferMode;
 import javafx.scene.paint.Color;
 
@@ -153,16 +154,29 @@ public class UIFlow extends UICell {
 
         // Ensure all cells' setTranslateX is positive (ensures correct positioning in child classes)
         double minTranslate = 0;
-        for (UICell cell : cells) {
-            minTranslate = Math.min(cell.getTranslateX(), minTranslate);
+        for (Node node : getChildren()) {
+            minTranslate = Math.min(node.getTranslateX(), minTranslate);
         }
 
         minTranslate = Math.abs(minTranslate);
-        for (UICell cell : cells) {
-            cell.setTranslateX(cell.getTranslateX() + minTranslate);
+
+        for (Node node : getChildren()) {
+            node.setTranslateX(node.getTranslateX() + minTranslate);
         }
-        for (PolylineArrow line : lines) {
-            line.setTranslateX(line.getTranslateX() + minTranslate);
+
+//
+//        for (UICell cell : cells) {
+//            cell.setTranslateX(cell.getTranslateX() + minTranslate);
+//        }
+//        for (PolylineArrow line : lines) {
+//            line.setTranslateX(line.getTranslateX() + minTranslate);
+//        }
+    }
+
+    @Override
+    public void setPseudoVisible(boolean visible) {
+        for (UICell cell : cells) {
+            cell.setPseudoVisible(visible);
         }
     }
 

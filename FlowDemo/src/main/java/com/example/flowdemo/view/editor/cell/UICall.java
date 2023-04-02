@@ -18,6 +18,8 @@ import java.util.List;
 public class UICall extends UICell implements UIExprContainer {
 
     // Pair of rectangles
+    private StackPane root; // Root node
+    private HBox row; // Row of input widgets
     private Rectangle longBack;
     private Rectangle shortBack;
     private HBox paramExprs; // Container the ExprPlaceholders are placed within
@@ -28,7 +30,7 @@ public class UICall extends UICell implements UIExprContainer {
         super(cellID);
 
         // Create root node
-        StackPane root = new StackPane();
+        root = new StackPane();
         getChildren().add(root);
 
         // Create background rectangles
@@ -40,22 +42,22 @@ public class UICall extends UICell implements UIExprContainer {
         exprPlaceholders = new LinkedList<>();
 
         // Create node to layout inputs horizontally
-        HBox callRoot = new HBox();
-        callRoot.setAlignment(Pos.CENTER);
-        callRoot.setSpacing(10.0d);
-        root.getChildren().add(callRoot);
+        row = new HBox();
+        row.setAlignment(Pos.CENTER);
+        row.setSpacing(10.0d);
+        root.getChildren().add(row);
 
         // Container for picking function identifiers
         idfrBox = new ComboBox<>();
         idfrBox.setMaxWidth(UIExpr.PREF_WIDTH);
         idfrBox.setMaxHeight(UIExpr.PREF_HEIGHT);
-        callRoot.getChildren().add(idfrBox);
+        row.getChildren().add(idfrBox);
 
         // Horizontal list of expressions for parameters
         paramExprs = new HBox();
         paramExprs.setAlignment(Pos.CENTER);
         paramExprs.setSpacing(10.0d);
-        callRoot.getChildren().add(paramExprs);
+        row.getChildren().add(paramExprs);
     }
 
     /**
@@ -149,7 +151,9 @@ public class UICall extends UICell implements UIExprContainer {
     @Override
     public void updateLayout() {
         double width = INSET;
-        if (idfrBox != null && paramExprs != null) {
+        if (root.getChildren().contains(getPseudoLabel())) {
+            width += getPseudoLabel().getWidth();
+        } else if (idfrBox != null && paramExprs != null) {
             width += idfrBox.getMaxWidth();
 
             for (ExprPlaceholder placeholder : getExprPlaceholders()) {
@@ -159,7 +163,9 @@ public class UICall extends UICell implements UIExprContainer {
         }
 
         double height = 0;
-        if (idfrBox != null && paramExprs != null) {
+        if (root.getChildren().contains(getPseudoLabel())) {
+            height += getPseudoLabel().getHeight();
+        } else if (idfrBox != null && paramExprs != null) {
             height = idfrBox.getMaxHeight();
 
             for (ExprPlaceholder placeholder : getExprPlaceholders()) {
@@ -172,6 +178,34 @@ public class UICall extends UICell implements UIExprContainer {
         longBack.setHeight(height);
         shortBack.setWidth(width);
         shortBack.setHeight(height);
+    }
+
+    @Override
+    public void setPseudoVisible(boolean visible) {
+        if (visible && !root.getChildren().contains(getPseudoLabel())) {
+            // Remove input fields
+            root.getChildren().remove(row);
+
+            // Build pseudocode
+            StringBuilder pseudoCode = new StringBuilder("Call " + (idfrBox.getSelectionModel().getSelectedItem() == null ? "" : idfrBox.getSelectionModel().getSelectedItem()));
+            pseudoCode.append(" with input (");
+            String prefix = "";
+            for (ExprPlaceholder placeholder : exprPlaceholders) {
+                pseudoCode.append(prefix + placeholder.getPseudoLabel());
+                prefix = ", ";
+            }
+            pseudoCode.append(")");
+
+            // Add pseudocode label
+            getPseudoLabel().setText(pseudoCode.toString());
+            root.getChildren().add(getPseudoLabel());
+        } else if (!visible && !root.getChildren().contains(row)) {
+            // Add input fields
+            root.getChildren().add(row);
+
+            // Remove pseudocode label
+            root.getChildren().remove(getPseudoLabel());
+        }
     }
 
     @Override

@@ -109,8 +109,9 @@ public class UIFor extends UIWhile {
     }
 
     @Override
-    public void updateLayout() {
-        super.updateLayout();
+    public void setPseudoVisible(boolean visible) {
+        declaration.setPseudoVisible(visible);
+        super.setPseudoVisible(visible);
     }
 
     @Override

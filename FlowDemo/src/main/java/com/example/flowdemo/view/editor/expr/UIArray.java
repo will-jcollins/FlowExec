@@ -99,8 +99,20 @@ public class UIArray extends UIExpr implements UIExprContainer {
         } else {
             return 0;
         }
+    }
 
+    @Override
+    public String getPseudoLabel() {
+        StringBuilder output = new StringBuilder("{");
 
+        String prefix = "";
+        for (int i = 0; i < exprPlaceholders.size() - 1; i++) {
+            output.append(prefix + exprPlaceholders.get(i).getPseudoLabel());
+            prefix = ", ";
+        }
+        output.append("}");
+
+        return output.toString();
     }
 
     @Override
