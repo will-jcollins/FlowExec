@@ -131,5 +131,12 @@ public class UIArray extends UIExpr implements UIExprContainer {
         return complete;
     }
 
-
+    @Override
+    public void setStyleClass(String styleClass) {
+        getStyleClass().clear();
+        openLabel.getStyleClass().clear();
+        openLabel.getStyleClass().add(styleClass + "-arr");
+        closeLabel.getStyleClass().clear();
+        closeLabel.getStyleClass().add(styleClass + "-arr");
+    }
 }

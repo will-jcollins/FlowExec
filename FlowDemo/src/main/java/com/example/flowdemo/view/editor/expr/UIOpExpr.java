@@ -6,7 +6,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
 import javafx.scene.control.ComboBox;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.Border;
 import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,7 +34,7 @@ public class UIOpExpr extends UIExpr implements UIExprContainer {
         right = new ExprPlaceholder(id, 1);
 
         operator = new ComboBox<>();
-        operator.setMaxWidth(PREF_WIDTH * 0.75);
+        operator.setMaxWidth(PREF_WIDTH);
         operator.setMaxHeight(PREF_HEIGHT);
         ObservableList<String> options = FXCollections.observableArrayList();
         for (Operator op : Operator.values()) {
@@ -75,6 +78,15 @@ public class UIOpExpr extends UIExpr implements UIExprContainer {
     @Override
     public List<ExprPlaceholder> getExprPlaceholders() {
         return Arrays.asList(left, right);
+    }
+
+    @Override
+    public void setStyleClass(String styleClass) {
+        if (styleClass.equals("error")) {
+            operator.setBorder(Border.stroke(Color.RED));
+        } else {
+            operator.setBorder(Border.EMPTY);
+        }
     }
 
     @Override

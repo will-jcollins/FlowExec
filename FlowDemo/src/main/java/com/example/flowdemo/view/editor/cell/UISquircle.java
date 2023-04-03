@@ -29,6 +29,7 @@ public class UISquircle extends UICell {
 
         root.layout();
         layout();
+        setStyleClass("default-shape");
     }
 
     @Override

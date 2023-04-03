@@ -5,6 +5,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.ComboBox;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.Border;
+import javafx.scene.paint.Color;
 
 public class UIBool extends UIExpr {
     private ComboBox<String> comboBox;
@@ -58,5 +61,14 @@ public class UIBool extends UIExpr {
     @Override
     public boolean isComplete() {
         return !comboBox.getSelectionModel().getSelectedItem().equals("");
+    }
+
+    @Override
+    public void setStyleClass(String styleClass) {
+        if (styleClass.equals("error")) {
+            comboBox.setBorder(Border.stroke(Color.RED));
+        } else {
+            comboBox.setBorder(Border.EMPTY);
+        }
     }
 }

@@ -99,25 +99,18 @@ public class EditorView extends BorderPane {
         newElementsList.setAlignment(Pos.CENTER);
         newElementsList.setPadding(new Insets(20.0d, 20.0d, 20.0d, 20.0d));
         newElementsList.setId("item-list");
-        setLeft(newElementsList);
 
-//        // Add SplitPane to allow resizable elements list
-//        SplitPane centerPane = new SplitPane();
-//        centerPane.getItems().add(new ScrollPane(newElementsList));
-//        centerPane.getItems().add(editorRoot);
-//        setCenter(centerPane);
 
         // Add new elements
         for (ItemType type : ItemType.values()) {
             NewItem newItem = new NewItem(type);
             newItem.setOnDragDetected(e -> viewModel.onNewCellDragged(e, newItem));
-//            Platform.runLater(() -> {
-//                newItem.getImageView().fitWidthProperty().bind(centerPane.getDividers().get(0).positionProperty().multiply(centerPane.widthProperty()));
-//                newItem.getImageView().fitHeightProperty().bind(centerPane.getDividers().get(0).positionProperty().multiply(centerPane.heightProperty()));
-//
-//            });
             newElementsList.getChildren().add(newItem);
         }
+
+        ScrollPane newElementsRoot = new ScrollPane();
+        newElementsRoot.setContent(newElementsList);
+        setLeft(newElementsRoot);
 
         // Add toolbar
         HBox toolbar = new HBox();
@@ -256,47 +249,13 @@ public class EditorView extends BorderPane {
 
         List<UICell> uiCellList = uiFlow.getCells();
 
-        // Declare helper variables for loop
-        FlowNode currentNode;
-        UICell currentCell;
-        int cellIndex = 0; // Tracks the current position on the flow object rather than in the cellList
-
-        for (int i = 0; i < flowNodeList.size(); i++) {
-            if (uiCellList.size() <= i) {
-                // End of cells has been reached whilst nodes still remain, add remaining nodes to UI
-                while (i < flowNodeList.size()) {
-                    currentNode = flowNodeList.get(i);
-                    uiFlow.addCell(generateCell(currentNode), cellIndex);
-                    i += 1;
-                    cellIndex += 1;
-                }
-                break; // Nothing left to do, break out of for loop
-            }
-
-            currentNode = flowNodeList.get(i);
-            currentCell = uiCellList.get(i);
-
-            if (currentNode.getId() == currentCell.getCellID()) {
-                // Cell and node match, make sure information is correct
-                updateCell(currentCell, currentNode);
-                cellIndex += 1;
-            } else if (currentNode.getId() != currentCell.getCellID()) {
-                // Cell and node do not match, insert new cell
-                UICell newCell = generateCell(currentNode);
-                uiCellList.add(cellIndex, newCell);
-                uiFlow.addCell(generateCell(currentNode),cellIndex);
-                cellIndex += 1;
-            }
+        for (UICell cell : uiCellList) {
+            uiFlow.removeCell(cell);
         }
 
-        if (flowNodeList.size() < uiCellList.size()) {
-            // End of nodes has been reached whilst cells still remain, remove remaining cells
-
-            while (cellIndex < uiCellList.size()) {
-                currentCell = uiCellList.get(cellIndex);
-                uiFlow.removeCell(currentCell);
-                cellIndex += 1;
-            }
+        for (FlowNode flowNode : flowNodeList) {
+            UICell uiCell = generateCell(flowNode);
+            uiFlow.addCell(uiCell, flowNodeList.indexOf(flowNode));
         }
     }
 
@@ -474,14 +433,14 @@ public class EditorView extends BorderPane {
         }
 
         FlowException error = viewModel.getError();
-        if (error != null) {
+        if (error != null && uiCell != null) {
             // If an error was found when converting to another language, update styling to communicate this
             if (error.getErrorType() == ErrorType.Node && error.getId() == uiCell.getCellID()) {
                 uiCell.setStyleClass("error");
             } else {
                 uiCell.setStyleClass("default");
             }
-        } else {
+        } else if (uiCell != null) {
             uiCell.setStyleClass("default");
         }
     }
@@ -688,6 +647,18 @@ public class EditorView extends BorderPane {
             for (int i = 0; i < exprList.size(); i++) {
                 uiExprContainer.getExprPlaceholders().get(i).setExpr(generateExpr(exprList.get(i)));
             }
+        }
+
+        FlowException error = viewModel.getError();
+        if (error != null && uiExpr != null) {
+            // If an error was found when converting to another language, update styling to communicate this
+            if (error.getErrorType() == ErrorType.Expr && error.getId() == uiExpr.getExprId()) {
+                uiExpr.setStyleClass("error");
+            } else {
+                uiExpr.setStyleClass("default");
+            }
+        } else if (uiExpr != null) {
+            uiExpr.setStyleClass("default");
         }
     }
 

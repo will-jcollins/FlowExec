@@ -6,27 +6,10 @@
     -fx-stroke: BLACK;
 }
 
-.drag-over-shape {
-    -fx-fill: WHITE;
-    -fx-stroke-width: 2;
-    -fx-stroke: BLUE;
-}
-
 .error-shape {
     -fx-fill: PINK;
     -fx-stroke-width: 2;
     -fx-stroke: RED;
-}
-
-.mouse-over-shape {
-    -fx-fill: WHITE;
-    -fx-stroke-width: 3;
-    -fx-stroke: GRAY;
-}
-.mouse-over-line {
-    -fx-fill: TRANSPARENT;
-    -fx-stroke-width: 3;
-    -fx-stroke: GRAY;
 }
 
 .default-line {
@@ -35,16 +18,35 @@
     -fx-stroke: BLACK;
 }
 
-.drag-over-line {
-    -fx-fill: TRANSPARENT;
-    -fx-stroke-width: 2;
-    -fx-stroke: BLUE;
-}
-
 .error-line {
     -fx-fill: TRANSPARENT;
     -fx-stroke-width: 2;
     -fx-stroke: RED;
+}
+
+
+.default-field {
+    -fx-background-color: -fx-text-box-border, -fx-background ;
+    -fx-background-insets: 0, 0 0 1 0 ;
+    -fx-background-radius: 0 ;
+}
+
+.default-field:focused {
+    -fx-background-color: -fx-focus-color, -fx-background ;
+}
+
+.error-arr {
+    -fx-text-fill: RED;
+}
+
+.error-field {
+    -fx-background-color: -fx-text-box-border, PINK ;
+    -fx-background-insets: 0, 0 0 1 0 ;
+    -fx-background-radius: 0 ;
+}
+
+.error-field:focused {
+    -fx-background-color: -fx-focus-color, PINK ;
 }
 
 .button {
@@ -103,12 +105,6 @@
 #item-list {
     -fx-font-size: 20px;
     -fx-font-weight: bold;
-}
-
-#default .shape {
-    -fx-fill: WHITE;
-    -fx-stroke-width: 2;
-    -fx-stroke: BLACK;
 }
 
 .root {

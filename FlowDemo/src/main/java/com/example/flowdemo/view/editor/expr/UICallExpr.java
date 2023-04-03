@@ -1,7 +1,10 @@
 package com.example.flowdemo.view.editor.expr;
 
 import javafx.scene.control.ComboBox;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.Border;
 import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -124,5 +127,14 @@ public class UICallExpr extends UIExpr implements UIExprContainer {
 
         return complete;
 
+    }
+
+    @Override
+    public void setStyleClass(String styleClass) {
+        if (styleClass.equals("error")) {
+            idfrBox.setBorder(Border.stroke(Color.RED));
+        } else {
+            idfrBox.setBorder(Border.EMPTY);
+        }
     }
 }

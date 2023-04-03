@@ -45,6 +45,10 @@ public abstract class UIExpr extends Group {
         return "";
     }
 
+    public void setStyleClass(String styleClass) {
+
+    }
+
     public abstract boolean isComplete();
 
 

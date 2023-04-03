@@ -93,7 +93,7 @@ public class UIIf extends UIFlow implements UIFlowContainer, UIExprContainer {
             trueLabel.setTranslateY(condition.attachRightY() + condition.getTranslateY() + 5);
 
             // Position line of if cells to the right
-            ifFlow.setTranslateX(Math.max(condition.getTranslateX() + condition.attachRightX(), elseFlow.getTranslateX() + elseFlow.getWidth() + INSET));
+            ifFlow.setTranslateX(condition.getTranslateX() + Math.max(condition.getWidth(), elseFlow.getWidth()) + INSET);
             ifFlow.setTranslateY(condition.getTranslateY() + condition.attachRightY() + CELL_PADDING);
 
             // Add flow-line into if branch
@@ -103,6 +103,7 @@ public class UIIf extends UIFlow implements UIFlowContainer, UIExprContainer {
                     ifFlow.getTranslateX() + ifFlow.attachTopX(), condition.getTranslateY() + condition.attachRightY(),
                     ifFlow.getTranslateX() + ifFlow.attachTopX(), ifFlow.getTranslateY() + ifFlow.attachTopY()
             });
+            enterIfLine.getStyleClass().add("default-line");
             getChildren().add(enterIfLine);
 
             // Add flow-line out of if branch
@@ -112,6 +113,7 @@ public class UIIf extends UIFlow implements UIFlowContainer, UIExprContainer {
                     ifFlow.getTranslateX() + ifFlow.attachBotX(), Math.max(elseFlow.getTranslateY() + elseFlow.attachBotY() + CELL_PADDING, ifFlow.getTranslateY() + ifFlow.attachBotY() + CELL_PADDING),
                     elseFlow.getTranslateX() + elseFlow.attachBotX(), Math.max(elseFlow.getTranslateY() + elseFlow.attachBotY() + CELL_PADDING, ifFlow.getTranslateY() + ifFlow.attachBotY() + CELL_PADDING)
             });
+            exitIfLine.getStyleClass().add("default-line");
             getChildren().add(exitIfLine);
 
             // Add flow-line out of cell
@@ -121,6 +123,7 @@ public class UIIf extends UIFlow implements UIFlowContainer, UIExprContainer {
                     elseFlow.getTranslateX() + elseFlow.attachBotX(), elseFlow.getTranslateY() + elseFlow.attachBotY(),
                     elseFlow.getTranslateX() + elseFlow.attachBotX(), Math.max(elseFlow.getTranslateY() + elseFlow.attachBotY() + CELL_PADDING * 2, ifFlow.getTranslateY() + ifFlow.attachBotY() + CELL_PADDING * 2
                     ));
+            exitElseLine.getStyleClass().add("default-line");
             getChildren().add(exitElseLine);
         }
     }
@@ -135,11 +138,6 @@ public class UIIf extends UIFlow implements UIFlowContainer, UIExprContainer {
     @Override
     public void setStyleClass(String styleClass) {
         condition.setStyleClass(styleClass);
-//        enterIfLine.setStyleClass(styleClass);
-//        exitIfLine.setStyleClass(styleClass);
-//
-//        exitElseLine.getStyleClass().clear();
-//        exitElseLine.getStyleClass().add(styleClass + CSS_LINE_CLASS);
     }
 
     @Override

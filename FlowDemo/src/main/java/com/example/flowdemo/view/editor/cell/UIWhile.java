@@ -45,7 +45,7 @@ public class UIWhile extends UIFlow implements UIFlowContainer, UIExprContainer 
 
     @Override
     public double attachBotX() {
-        double maxWidth = Math.max(bodyFlow.getBoundsInLocal().getWidth(), condition.getBoundsInLocal().getWidth());
+        double maxWidth = Math.max(bodyFlow.getWidth(), condition.getWidth());
         return condition.getTranslateX() + condition.attachLeftX() - maxWidth;
     }
 
@@ -73,7 +73,7 @@ public class UIWhile extends UIFlow implements UIFlowContainer, UIExprContainer 
             super.updateLayout();
 
             // Add line leading from bodyFLow to condition
-            double maxWidth = Math.max(bodyFlow.getBoundsInLocal().getWidth(), condition.getBoundsInLocal().getWidth());
+            double maxWidth = Math.max(bodyFlow.getWidth(), condition.getWidth());
             getChildren().remove(exitBody);
             exitBody = new PolylineArrow(new Double[]{
                     bodyFlow.getTranslateX() + bodyFlow.attachBotX(), bodyFlow.getTranslateY() + bodyFlow.attachBotY(),
@@ -143,10 +143,6 @@ public class UIWhile extends UIFlow implements UIFlowContainer, UIExprContainer 
     @Override
     public void setStyleClass(String styleClass) {
         condition.setStyleClass(styleClass);
-//        exitBody.setStyleClass(styleClass);
-
-//        exitLoop.getStyleClass().clear();
-//        exitLoop.getStyleClass().add(styleClass + CSS_LINE_CLASS);
     }
 
     @Override

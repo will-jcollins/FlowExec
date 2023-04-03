@@ -60,6 +60,13 @@ public class UIVar extends UIExpr {
     }
 
     @Override
+    public void setStyleClass(String styleClass) {
+        field.getStyleClass().clear();
+        field.getStyleClass().add(".text-field");
+        field.getStyleClass().add(styleClass + "-field");
+    }
+
+    @Override
     public boolean isComplete() {
         return !field.getText().equals("");
     }
