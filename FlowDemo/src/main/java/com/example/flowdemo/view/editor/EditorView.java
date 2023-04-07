@@ -30,24 +30,16 @@ import static java.lang.Thread.sleep;
  * Class responsible for generating the visual elements of the flow-chart editing view
  */
 public class EditorView extends BorderPane {
-    // --- Vocabulary ---
-    // Cell - UI element that visualises a FlowNode in the model
-
     private EditorViewModel viewModel; // ViewModel responsible for bridging view to the model
-    private SimpleBooleanProperty updateSignal; // Property that changes when the model has changed
-                                                // and signals that the view needs to be updated (linked to viewModel)
-    private boolean pseudoVisible = false; // Indicates if flow-chart shows input widgets or pseudocode
     private TabPane editorRoot; // ViewPort for the flow-chart editor window
-    private Text functionDescription; // Label that describes the flow-chart currently visible
+    private Text functionDescription; // Label that describes the inputs and outputs of the flow-chart currently visible
 
     // Toolbar buttons
-    private Button addButton;
-    private Button editButton;
-    private Button removeButton;
+    private Button editButton; // Button to edit the currently selected flow, needed as an attribute so it can be disabled
+    private Button removeButton; // Button to remove the currently selected flow, needed as an attribute so it can be disabled
     public EditorView(EditorViewModel viewModel) {
         // Set attributes
         this.viewModel = viewModel;
-        this.updateSignal = viewModel.updateSignalProperty();
 
         // Initialise viewport for flow-chart editor
         editorRoot = new TabPane();
@@ -80,15 +72,17 @@ public class EditorView extends BorderPane {
         newElementsRoot.setContent(newElementsList);
         setLeft(newElementsRoot);
 
-        // Add toolbar
+        // Add horizontal container for buttons to be placed
         HBox toolbar = new HBox();
         toolbar.setSpacing(10);
         toolbar.setPadding(new Insets(10, 10, 10, 10));
 
+        // Button to save model
         Button saveButton = new Button("Save");
         saveButton.setOnMouseClicked(e -> viewModel.saveModel());
         toolbar.getChildren().add(saveButton);
 
+        // Button to load model
         Button loadButton = new Button("Load");
         loadButton.setOnMouseClicked(e -> {
             viewModel.loadModel();
@@ -100,10 +94,12 @@ public class EditorView extends BorderPane {
         });
         toolbar.getChildren().add(loadButton);
 
-        addButton = new Button("Add function");
+        // Button to add new function
+        Button addButton = new Button("Add function");
         addButton.setOnMouseClicked(e -> addFunction());
         toolbar.getChildren().add(addButton);
 
+        // Button to remove current function
         removeButton = new Button("Remove Function");
         removeButton.setOnMouseClicked(e -> {
             viewModel.removeFunction();
@@ -111,10 +107,12 @@ public class EditorView extends BorderPane {
         });
         toolbar.getChildren().add(removeButton);
 
+        // Button to edit function name and parameters
         editButton = new Button("Edit Function");
         editButton.setOnMouseClicked(e -> editFunction());
         toolbar.getChildren().add(editButton);
 
+        // Button to toggle pseudocode visibility
         Button pseudoCodeButton = new Button("Show Pseudocode");
         pseudoCodeButton.setOnMouseClicked(e -> {
             // Toggle pseudocode visibility
@@ -132,6 +130,7 @@ public class EditorView extends BorderPane {
         Button compileButton = new Button("Compile");
         toolbar.getChildren().add(compileButton);
 
+        // Selection for target language of compilation
         ComboBox<String> compileChoice = new ComboBox<>();
         compileChoice.getItems().add("java");
         compileChoice.getItems().add("python");
@@ -166,16 +165,39 @@ public class EditorView extends BorderPane {
         selectFlow("main");
     }
 
+    /**
+     * Reloads the tabs in the editorView to match the structure of the model
+     */
     public void updateTabs() {
         // Clear tabs
         editorRoot.getTabs().clear();
 
-        // Add new tabs
-        for (String identifier : viewModel.getFunctionIdentifiers()) {
+        // Add new tabs (for loop must be descending to ensure tabs are added in correct order)
+        for (int i = viewModel.getFunctionIdentifiers().size() - 1; i >= 0; i--) {
+            String identifier = viewModel.getFunctionIdentifiers().get(i);
             ZoomableScrollPane tabView = new ZoomableScrollPane(viewModel.getFlowRoot(identifier));
             Tab tab = new Tab(identifier, tabView);
             editorRoot.getTabs().add(tab);
         }
+    }
+
+    private void selectFlow(String identifier) {
+        // Inform viewModel of selection
+        viewModel.selectModel(identifier);
+
+        // Retrieve and display function description
+        functionDescription.setText("   " + viewModel.getFunctionDescription());
+
+        // Select matching tab
+        for (Tab tab : editorRoot.getTabs()) {
+            if (tab.getText().equals(identifier)) {
+                editorRoot.getSelectionModel().select(tab);
+            }
+        }
+
+        // Disable edit and remove buttons if main function is selected
+        editButton.setDisable(identifier.equals("main"));
+        removeButton.setDisable(identifier.equals("main"));
     }
 
 
@@ -280,23 +302,5 @@ public class EditorView extends BorderPane {
         });
         editFunctionStage.setOnCancel(e -> editFunctionStage.close());
         editFunctionStage.showAndWait();
-    }
-
-    private void selectFlow(String identifier) {
-        // Inform viewModel of selection
-        viewModel.selectModel(identifier);
-
-        // Update function description
-        functionDescription.setText("   " + viewModel.getFunctionDescription());
-
-        // Select matching tab
-        for (Tab tab : editorRoot.getTabs()) {
-            if (tab.getText().equals(identifier)) {
-                editorRoot.getSelectionModel().select(tab);
-            }
-        }
-
-        editButton.setDisable(identifier.equals("main"));
-        removeButton.setDisable(identifier.equals("main"));
     }
 }

@@ -31,6 +31,7 @@ import java.util.*;
 import static java.lang.Thread.sleep;
 
 public class EditorViewModel {
+    // Model attributes
     private Map<String, Flow> flowMap; // Maps identifiers to flow-chart models
     private Flow selectedModel; // Currently visible model
     private FlowNode dragNode; // Node being dragged
@@ -38,19 +39,15 @@ public class EditorViewModel {
     private FlowException error; // Error returned from semantic analysis
 
     // View attributes
-    private SimpleBooleanProperty updateSignal;
     private Map<String,UIFlow> functionRootMap; // Maps function name to all of its corresponding visual elements
     private Map<String,UIFlow> functionFlowMap; // Maps function name to all of its visual elements represented in the model
-    private String selectedFlow; // String key for the UIFlow that is currently visible
-    private UIFlow selectedFlowRoot; // UIFlow mapped in functionRootMap that has selectedFlow as its key
-    private UIFlow selectedFlowBody; // UIFlow mapped in functionFlowMap that has selectedFlow as its key
+    private UIFlow selectedFlowRoot; // UIFlow mapped in functionRootMap with identifier matching selectedModel
+    private UIFlow selectedFlowBody; // UIFlow mapped in functionFlowMap with identifier matching selectedModel
     private boolean pseudoVisible = false; // True if pseudocode labels should be visible
 
     public EditorViewModel() {
         flowMap = new HashMap<>();
         flowMap.put("main", new Flow());
-
-        this.updateSignal = new SimpleBooleanProperty(true);
 
         // Create UIFlow maps
         functionRootMap = new HashMap<>();
@@ -639,16 +636,8 @@ public class EditorViewModel {
         update();
     }
 
-    /**
-     * Returns a JavaFX boolean property that changes when the model is updated
-     * @return change property
-     */
-    public SimpleBooleanProperty updateSignalProperty() {
-        return updateSignal;
-    }
-
     private void update() {
-        importFlow(selectedModel.getFlowNodes(), functionFlowMap.get(selectedFlow));
+        importFlow(selectedModel.getFlowNodes(), selectedFlowBody);
         selectedFlowRoot.setPseudoVisible(pseudoVisible);
 
         // Update layout after graphics have been updated in JavaFX UI thread to ensure correct positioning
@@ -662,9 +651,6 @@ public class EditorViewModel {
         };
         Thread updateThread = new Thread(task);
         updateThread.start();
-
-        // Flip boolean
-        updateSignal.set(!updateSignal.get());
     }
 
     /**
@@ -840,7 +826,6 @@ public class EditorViewModel {
      */
     public void selectModel(String identifier) {
         selectedModel = flowMap.get(identifier);
-        selectedFlow = identifier;
         selectedFlowRoot = functionRootMap.get(identifier);
         selectedFlowBody = functionFlowMap.get(identifier);
 
@@ -904,7 +889,7 @@ public class EditorViewModel {
      */
     public void removeFunction() {
         String identifier = getSelectedIdentifier();
-        flowMap.remove(selectedFlow);
+        flowMap.remove(identifier);
         functionRootMap.remove(identifier);
         functionFlowMap.remove(identifier);
 
