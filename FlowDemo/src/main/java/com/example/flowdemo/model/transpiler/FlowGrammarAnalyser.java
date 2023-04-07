@@ -222,6 +222,11 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
             throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Node, "Duplicate for loop variable identifier: " + identifier);
         }
 
+        if (type != DataType.IntType) {
+            // Condition expression has incorrect type : raise exception
+            throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Node, "For loop iterator is not of type int, instead: " + type.toString());
+        }
+
         // Check initial value is an integer
         DataType startType = visit(ctx.expr(0));
         if (startType != DataType.IntType) {
@@ -269,7 +274,7 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
         visit(ctx.block(0));
         visit(ctx.block(1));
 
-        return super.visitIfStmt(ctx);
+        return DataType.VoidType; // Value is ignored
     }
 
     @Override
@@ -287,7 +292,7 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
             throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Node, "Return type: " + returnType + ", does not match function definition type: " + functionType + ".");
         }
 
-        return returnType;
+        return DataType.VoidType; // Value is ignored
     }
 
     @Override

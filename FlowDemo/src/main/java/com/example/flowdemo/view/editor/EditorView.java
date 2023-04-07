@@ -36,11 +36,6 @@ public class EditorView extends BorderPane {
     private EditorViewModel viewModel; // ViewModel responsible for bridging view to the model
     private SimpleBooleanProperty updateSignal; // Property that changes when the model has changed
                                                 // and signals that the view needs to be updated (linked to viewModel)
-    private Map<String,UIFlow> functionRootMap; // Maps function name to all of its corresponding visual elements
-    private Map<String,UIFlow> functionFlowMap; // Maps function name to all of its visual elements represented in the model
-    private String selectedFlow; // String key for the UIFlow that is currently visible
-    private UIFlow selectedFlowRoot; // UIFlow mapped in functionRootMap that has selectedFlow as its key
-    private UIFlow selectedFlowBody; // UIFlow mapped in functionFlowMap that has selectedFlow as its key
     private boolean pseudoVisible = false; // Indicates if flow-chart shows input widgets or pseudocode
     private TabPane editorRoot; // ViewPort for the flow-chart editor window
     private Text functionDescription; // Label that describes the flow-chart currently visible
@@ -54,44 +49,17 @@ public class EditorView extends BorderPane {
         this.viewModel = viewModel;
         this.updateSignal = viewModel.updateSignalProperty();
 
-        // Initialise flows
-        functionRootMap = new HashMap<>();
-        functionFlowMap = new HashMap<>();
-        selectedFlowBody = new UIFlow(UICell.IRRELEVANT_ID);
-        selectedFlowRoot = new UIFlow(UICell.IRRELEVANT_ID);
-        functionRootMap.put("main", selectedFlowRoot);
-        functionFlowMap.put("main", selectedFlowBody);
-
-        // Initialise editor view
-        ZoomableScrollPane mainView = new ZoomableScrollPane(selectedFlowRoot);
+        // Initialise viewport for flow-chart editor
         editorRoot = new TabPane();
         editorRoot.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
-        // Initialise main function tab
-        Tab mainTab = new Tab("main", mainView);
-        editorRoot.getTabs().add(mainTab);
-        editorRoot.getSelectionModel().select(mainTab);
-
-        // Add listener for change to tab
+        // Add listener for change to selected tab
         editorRoot.getSelectionModel().selectedItemProperty().addListener(e -> {
             if (editorRoot.getSelectionModel().getSelectedItem() != null) {
                 selectFlow(editorRoot.getSelectionModel().getSelectedItem().getText());
             }
         });
         setCenter(editorRoot);
-
-        // Add start and end cells to main's root flow
-        UISquircle start = new UISquircle("Start", UICell.IRRELEVANT_ID);
-        start.setStyleClass("default");
-        start.setOnMouseClicked(e -> selectedFlowRoot.updateLayout());
-        UISquircle end = new UISquircle("End", UICell.IRRELEVANT_ID);
-        end.setStyleClass("default");
-        selectedFlowRoot.addCell(start, 0);
-        selectedFlowRoot.addCell(selectedFlowBody, 1);
-        selectedFlowRoot.addCell(end, 2);
-
-        // Add event handlers to main's flowBody's cell placeholder
-        setCellPlaceholderHandlers(selectedFlowBody.getPlaceholder());
 
         // Initialise new elements list
         VBox newElementsList = new VBox();
@@ -125,35 +93,9 @@ public class EditorView extends BorderPane {
         loadButton.setOnMouseClicked(e -> {
             viewModel.loadModel();
 
-            // Create new tabs with new UIFlows
+            // Create new tabs from loaded information in the viewModel
             editorRoot.getTabs().clear();
-
-            List<String> identifiers = viewModel.getFunctionIdentifiers();
-            for (int i = identifiers.size() - 1; i >= 0; i--) {
-                String identifier = identifiers.get(i);
-                // Create function's UIFlows
-                UIFlow flowRoot = new UIFlow(UICell.IRRELEVANT_ID);
-                UIFlow flowBody = new UIFlow(UICell.IRRELEVANT_ID);
-                UISquircle startSquircle = new UISquircle("Start", UICell.IRRELEVANT_ID);
-                UISquircle endSquircle = new UISquircle("End", UICell.IRRELEVANT_ID);
-                flowRoot.addCell(startSquircle, 0);
-                flowRoot.addCell(flowBody, 1);
-                flowRoot.addCell(endSquircle, 2);
-
-                // Add function to View maps
-                functionRootMap.put(identifier, flowRoot);
-                functionFlowMap.put(identifier, flowBody);
-
-                // Set event handlers for root UIFlow placeholder
-                setCellPlaceholderHandlers(flowBody.getPlaceholder());
-
-                // Create ViewPort and add it to the editor TabPane
-                ZoomableScrollPane editorView = new ZoomableScrollPane(flowRoot);
-                editorView.setId("grid");
-                Tab tab = new Tab(identifier, editorView);
-                editorRoot.getTabs().add(tab);
-            }
-
+            updateTabs();
             selectFlow("main");
         });
         toolbar.getChildren().add(loadButton);
@@ -163,7 +105,10 @@ public class EditorView extends BorderPane {
         toolbar.getChildren().add(addButton);
 
         removeButton = new Button("Remove Function");
-        removeButton.setOnMouseClicked(e -> removeFunction(selectedFlow));
+        removeButton.setOnMouseClicked(e -> {
+            viewModel.removeFunction();
+            updateTabs();
+        });
         toolbar.getChildren().add(removeButton);
 
         editButton = new Button("Edit Function");
@@ -172,18 +117,15 @@ public class EditorView extends BorderPane {
 
         Button pseudoCodeButton = new Button("Show Pseudocode");
         pseudoCodeButton.setOnMouseClicked(e -> {
-            // Swap visibility
-            pseudoVisible = !pseudoVisible;
+            // Toggle pseudocode visibility
+            viewModel.togglePseudoVisible();
 
             // Update button label
-            if (pseudoVisible) {
+            if (viewModel.isPseudoVisible()) {
                 pseudoCodeButton.setText("Hide Pseudocode");
             } else {
                 pseudoCodeButton.setText("Show Pseudocode");
             }
-
-            update();
-
         });
         toolbar.getChildren().add(pseudoCodeButton);
 
@@ -198,8 +140,8 @@ public class EditorView extends BorderPane {
 
         compileButton.setOnMouseClicked(e -> {
             boolean complete = true;
-            for (UIFlow flow : functionRootMap.values()) {
-                complete = flow.isComplete() && complete;
+            for (String identifier : viewModel.getFunctionIdentifiers()) {
+                complete = viewModel.getFlowRoot(identifier).isComplete() && complete;
             }
 
             if (complete) {
@@ -220,447 +162,22 @@ public class EditorView extends BorderPane {
         setBottom(functionDescriptionContainer);
 
         // Select main as the currently visible Flow-Chart (only one that should currently exist)
+        updateTabs();
         selectFlow("main");
-
-        // Add listener to binding
-        updateSignal.addListener((observableValue, oldValue, newValue) -> update());
     }
 
-    public void update() {
-        importFlow(viewModel.getFlowNodes(), functionFlowMap.get(selectedFlow));
-        selectedFlowRoot.setPseudoVisible(pseudoVisible);
+    public void updateTabs() {
+        // Clear tabs
+        editorRoot.getTabs().clear();
 
-        // Reflect changes outside the UI thread to prevent blocking
-        Runnable a = () -> {
-            try {
-                sleep(50);
-                Platform.runLater(() -> {
-                    selectedFlowRoot.updateLayout();
-                });
-            } catch (InterruptedException e) { }
-        };
-        Thread b = new Thread(a);
-        b.start();
-    }
-
-
-    private void importFlow(List<FlowNode> flowNodeList, UIFlow uiFlow) {
-        // Updates a UIFlow to represent the current state of a list of model nodes
-
-        List<UICell> uiCellList = uiFlow.getCells();
-
-        for (UICell cell : uiCellList) {
-            uiFlow.removeCell(cell);
-        }
-
-        for (FlowNode flowNode : flowNodeList) {
-            UICell uiCell = generateCell(flowNode);
-            uiFlow.addCell(uiCell, flowNodeList.indexOf(flowNode));
+        // Add new tabs
+        for (String identifier : viewModel.getFunctionIdentifiers()) {
+            ZoomableScrollPane tabView = new ZoomableScrollPane(viewModel.getFlowRoot(identifier));
+            Tab tab = new Tab(identifier, tabView);
+            editorRoot.getTabs().add(tab);
         }
     }
 
-    private UICell generateCell(FlowNode in) {
-        // Generates a visual representation of a model node input
-
-        // Declare output variable
-        UICell out;
-
-        if (in instanceof IfNode) {
-            out = new UIIf(in.getId());
-        } else if (in instanceof WhileNode) {
-            out = new UIWhile(in.getId());
-        } else if (in instanceof AssignArrayNode assignArrayNode) {
-            UIAssign uiAssignArray = new UIAssignArray(in.getId());
-
-            // Set a listener to reflect any changes to the variable textField in the model
-            uiAssignArray.getVarName().textProperty().addListener(e -> viewModel.updateAssignNodeIdentifier(assignArrayNode, uiAssignArray.getVarName().getText()));
-            out = uiAssignArray;
-        } else if (in instanceof AssignNode assignNode) {
-            UIAssign uiAssign = new UIAssign(in.getId());
-
-            // Set a listener to reflect any changes to the variable textField in the model
-            uiAssign.getVarName().textProperty().addListener(e -> viewModel.updateAssignNodeIdentifier(assignNode, uiAssign.getVarName().getText()));
-            out = uiAssign;
-        } else if (in instanceof DeclareAssignNode declareAssignNode) {
-            UIDeclareAssign uiDeclareAssign = new UIDeclareAssign(in.getId());
-
-            // Set a listener to reflect any changes to the variable textField and type ComboBox in the model
-            uiDeclareAssign.getTypes().getSelectionModel().selectedItemProperty().addListener(e -> viewModel.updateDeclareAssignNodeType(declareAssignNode, uiDeclareAssign.getTypes().getSelectionModel().getSelectedItem()));
-            uiDeclareAssign.getVarName().textProperty().addListener(e -> viewModel.updateDeclareAssignNodeIdentifier(declareAssignNode, uiDeclareAssign.getVarName().getText()));
-            out = uiDeclareAssign;
-        } else if (in instanceof OutputNode) {
-            out = new UIOutput(in.getId());
-        } else if (in instanceof ForNode forNode) {
-            UIFor uiFor = new UIFor(in.getId());
-
-            // Set a listener to reflect any changes to the counter variable textField in the model
-            uiFor.getIdentifier().addListener(e -> viewModel.updateForIdentifier(forNode, uiFor.getIdentifier().getValue()));
-            out = uiFor;
-        } else if (in instanceof CallNode callNode) {
-            UICall uiCall = new UICall(in.getId());
-
-            // Set a listener to reflect any changes to the identifier ComboBox in the model and update the number of parameters
-            uiCall.getIdfrBox().getSelectionModel().selectedItemProperty().addListener(e -> {
-                // Update identifier in model
-                viewModel.updateCallNodeIdentifier(callNode, uiCall.getIdfrBox().getSelectionModel().getSelectedItem());
-
-                // Update number of expression placeholders to match number of parameters
-                uiCall.setSetNumberOfParameters(callNode.getExprs().size());
-
-                // Set drag and drop handlers to expression placeholders
-                for (ExprPlaceholder placeholder : uiCall.getExprPlaceholders()) {
-                    setTopExprPlaceholderHandlers(placeholder);
-                }
-
-                selectedFlowRoot.updateLayout();
-            });
-            out = uiCall;
-        } else if (in instanceof ReturnNode) {
-            out = new UIReturn(in.getId());
-        } else {
-            // FlowNode hasn't been given a UI definition; Generate a cell that communicates this
-            out = new UISquircle("UNDEFINED",UICell.IRRELEVANT_ID);
-        }
-
-        // Set event handlers on child UIFlows contained within the new cell so new cells can be added to it by the user
-        if (out instanceof UIFlowContainer container) {
-            for (UIFlow placeholder : container.getFlows()) {
-                setCellPlaceholderHandlers(placeholder.getPlaceholder());
-            }
-        }
-
-        // Set event handlers on expressions contained within the cell so new expressions can be added by the user
-        if (out instanceof UIExprContainer container) {
-            for (ExprPlaceholder placeholder : container.getExprPlaceholders()) {
-                setTopExprPlaceholderHandlers(placeholder);
-            }
-        }
-
-        // Populate cell with model information
-        updateCell(out, in);
-
-        // Inform the viewModel that cell is being dragged when a drag gesture is detected
-        out.setOnDragDetected(e -> viewModel.onCellDragged(e, out));
-
-        // Highlight cell if another cell is being dragged over it
-        out.setOnDragEntered(e -> {
-            if (viewModel.isNodeDragged()) {
-
-            }
-        });
-
-        // Reset cell styling when another cell is no longer being dragged over it
-        out.setOnDragExited(e -> {
-
-            e.consume();
-        });
-
-        // Inform the viewModel that a cell has been drag and dropped on this cell
-        out.setOnDragDropped(e -> viewModel.onCellDropped(e,out));
-
-        // Inform JavaFX that the drag gesture is valid if another cell is being dragged over it
-        out.setOnDragOver(e -> {
-            if (viewModel.isNodeDragged()) {
-                e.acceptTransferModes(TransferMode.ANY);
-            }
-        });
-
-        return out;
-    }
-
-    private void updateCell(UICell uiCell, FlowNode flowNode) {
-        // Populates input cell with model information from input node
-
-        if (flowNode instanceof CallNode callNode && uiCell instanceof UICall uiCall) {
-            // Include list of currently declared flow-chart function identifiers in the ComboBox
-            List<String> functionIdentifiers = new ArrayList<>(List.copyOf(viewModel.getFunctionIdentifiers()));
-            functionIdentifiers.removeAll(uiCall.getIdfrBox().getItems());
-            for (String identifier : functionIdentifiers) {
-                uiCall.getIdfrBox().getItems().add(identifier);
-            }
-
-            // Select ComboBox item (identifier) that is stored in model CallNode
-            uiCall.getIdfrBox().getSelectionModel().select(callNode.getIdentifier());
-
-            if (!callNode.getIdentifier().equals("")) {
-                viewModel.updateCallNodeIdentifier(callNode, callNode.getIdentifier());
-            }
-
-            // Update the number of expression placeholders (function parameter inputs) to reflect model
-            uiCall.setSetNumberOfParameters(callNode.getExprs().size());
-            // Set drag and drop handlers to expression placeholders
-            for (ExprPlaceholder placeholder : uiCall.getExprPlaceholders()) {
-                setTopExprPlaceholderHandlers(placeholder);
-            }
-        }
-
-        if (flowNode instanceof DeclareAssignNode declareAssignNode && uiCell instanceof UIDeclareAssign uiDeclareAssign) {
-            // Update ComboBox to reflect FlowNode's type selection
-            if (declareAssignNode.getSignature().getType() != null) {
-                uiDeclareAssign.getTypes().getSelectionModel().select(declareAssignNode.getSignature().getType().toString());
-            } else {
-                uiDeclareAssign.getTypes().getSelectionModel().clearSelection();
-            }
-
-            // Update TextField to reflect FlowNode's variable identifier
-            uiDeclareAssign.getVarName().setText(declareAssignNode.getSignature().getIdentifier());
-        }
-
-        if (flowNode instanceof AssignNode assignNode && uiCell instanceof UIAssign uiAssign) {
-            // Update TextField to reflect FlowNode's variable identifier
-            uiAssign.getVarName().setText(assignNode.getIdentifier());
-        }
-
-        if (flowNode instanceof ForNode forNode && uiCell instanceof UIFor uiFor) {
-            // Update TextField to reflect FlowNode's counter variable identifier
-            uiFor.getIdentifier().set(forNode.getIdentifier());
-        }
-
-        if (flowNode instanceof FlowContainer container && uiCell instanceof UIFlowContainer uiContainer) {
-            // Import the Flow into each UIFlow
-            List<Flow> flows = container.getFlows();
-            for (int i = 0; i < flows.size(); i++) {
-                importFlow(flows.get(i).getFlowNodes(), uiContainer.getFlows().get(i));
-            }
-        }
-
-        if (flowNode instanceof ExprContainer container && uiCell instanceof UIExprContainer uiContainer) {
-            // Generate each Expr in the container
-            List<Expr> exprs = container.getExprs();
-            for (int i = 0; i < exprs.size(); i++) {
-                uiContainer.getExprPlaceholders().get(i).setExpr(generateExpr(exprs.get(i)));
-            }
-        }
-
-        FlowException error = viewModel.getError();
-        if (error != null && uiCell != null) {
-            // If an error was found when converting to another language, update styling to communicate this
-            if (error.getErrorType() == ErrorType.Node && error.getId() == uiCell.getCellID()) {
-                uiCell.setStyleClass("error");
-            } else {
-                uiCell.setStyleClass("default");
-            }
-        } else if (uiCell != null) {
-            uiCell.setStyleClass("default");
-        }
-    }
-
-    private void setExprHandlers(UIExpr expr) {
-        // Inform the viewModel that expr is being dragged when a drag gesture is detected
-        expr.setOnDragDetected(e -> viewModel.onExprDragged(e,expr));
-    }
-
-    private void setTopExprPlaceholderHandlers(ExprPlaceholder placeholder) {
-        // Sets event handlers for expression placeholders that are not contained within another expression
-
-        // Inform JavaFX that the drag gesture is valid if an expression is being dragged over it
-        placeholder.setOnDragOver(e -> {
-            if (viewModel.isExprDragged()) {
-                e.acceptTransferModes(TransferMode.ANY);
-            }
-        });
-
-        // Highlight placeholder if an expression is being dragged over it
-        placeholder.setOnDragEntered(e -> {
-            if (viewModel.isExprDragged()) {
-                placeholder.setStroke(Color.BLUE);
-            }
-        });
-
-        // Reset cell styling when an expression is no longer being dragged over it
-        placeholder.setOnDragExited(e -> placeholder.setStroke(Color.BLACK));
-
-        // Inform the viewModel that an expression has been drag and dropped on this placeholder
-        placeholder.setOnDragDropped(e -> viewModel.onExprPlaceholderDrop(e, placeholder));
-    }
-
-    private void setNestedExprPlaceholderHandlers(ExprPlaceholder placeholder) {
-        // Sets event handlers for expressions placeholders that are contained within another expression
-
-        // Inform JavaFX that the drag gesture is valid if a cell is being dragged over it
-        placeholder.setOnDragOver(e -> {
-            if (viewModel.isExprDragged()) {
-                e.acceptTransferModes(TransferMode.ANY);
-            }
-        });
-
-        // Highlight placeholder if an expression is being dragged over it
-        placeholder.setOnDragEntered(e -> {
-            if (viewModel.isExprDragged()) {
-                placeholder.setStroke(Color.BLUE);
-            }
-        });
-
-        // Reset cell styling when an expression is no longer being dragged over it
-        placeholder.setOnDragExited(e -> placeholder.setStroke(Color.BLACK));
-
-        // Inform the viewModel that an expression has been drag and dropped on this placeholder
-        placeholder.setOnDragDropped(e -> viewModel.onNestedExprPlaceholderDrop(e, placeholder));
-    }
-
-    private void setCellPlaceholderHandlers(CellPlaceholder placeholder) {
-        // Sets event handlers for cell placeholders
-
-        // Inform the viewModel that a cell has been drag and dropped on this placeholder
-        placeholder.setOnDragDropped(e -> viewModel.onCellPlaceholderDrop(e, placeholder));
-
-        // Highlight placeholder if a cell is being dragged over it
-        placeholder.setOnDragEntered(e -> {
-            if (viewModel.isNodeDragged()) {
-                placeholder.setStrokeFill(Color.BLUE);
-                e.consume();
-            }
-        });
-
-        // Reset cell styling when a cell is no longer being dragged over it
-        placeholder.setOnDragExited(e -> {
-            placeholder.setStrokeFill(Color.BLACK);
-            e.consume();
-        });
-
-        // Inform JavaFX that the drag gesture is valid if a cell is being dragged over it
-        placeholder.setOnDragOver(e -> {
-            if (viewModel.isNodeDragged()) {
-                e.acceptTransferModes(TransferMode.ANY);
-            }
-        });
-    }
-
-    private UIExpr generateExpr(Expr expr) {
-        // Generate expression visualisation from model information
-
-        // Declare output variable
-        UIExpr out = null;
-
-        if (expr instanceof BoolLit boolLit) {
-            UIBool uiBool = new UIBool(expr.getId());
-
-            // Set a listener to reflect any changes to the boolean ComboBox in the model
-            uiBool.getComboxBoxProperty().addListener(e -> viewModel.updateBoolExpr(boolLit, uiBool.getValue()));
-            out = uiBool;
-        } else if (expr instanceof CharLit charLit) {
-            UIChar uiChar = new UIChar(expr.getId());
-
-            // Set a listener to reflect any changes to the char TextField in the model
-            uiChar.getTextProperty().addListener(e -> viewModel.updateCharExpr(charLit, uiChar.getValue()));
-            out = uiChar;
-        } else if (expr instanceof IntLit intLit) {
-            UIInt uiInt = new UIInt(expr.getId());
-
-            // Set a listener to reflect any changes to the integer TextField in the model
-            uiInt.getTextProperty().addListener(e -> viewModel.updateIntExpr(intLit, uiInt.getText()));
-            out = uiInt;
-        } else if (expr instanceof  VarExpr varExpr) {
-            UIVar uiVar = new UIVar(expr.getId());
-
-            // Set a listener to reflect any changes to the identifier TextField in the model
-            uiVar.getTextProperty().addListener(e -> viewModel.updateVarExpr(varExpr, uiVar.getValue()));
-            out = uiVar;
-        } else if (expr instanceof OpExpr opExpr) {
-            UIOpExpr uiOpExpr = new UIOpExpr(expr.getId());
-
-            // Set a listener to reflect any changes to the operator ComboBox in the model
-            uiOpExpr.getComboxBoxProperty().addListener(e -> viewModel.updateOpExpr(opExpr, uiOpExpr.getValue()));
-            out = uiOpExpr;
-        } else if (expr instanceof ModifierExpr modExpr) {
-            UIModifierExpr uiModExpr = new UIModifierExpr(expr.getId());
-
-            // Set a listener to reflect any changes to the modifier ComboBox in the model
-            uiModExpr.getComboxBoxProperty().addListener(e -> viewModel.updateModExpr(modExpr, uiModExpr.getModifier()));
-            out = uiModExpr;
-        } else if (expr instanceof CallExpr callExpr) {
-            UICallExpr uiCallExpr = new UICallExpr(expr.getId());
-
-            for (String identifier : viewModel.getFunctionIdentifiers()) {
-                uiCallExpr.getComboBox().getItems().add(identifier);
-            }
-
-            // Set a listener to reflect any changes to the identifier ComboBox in the model and update the number of parameters
-            uiCallExpr.getComboBox().getSelectionModel().selectedItemProperty().addListener(e -> {
-                // Update identifier in model
-                viewModel.updateCallExprIdentifier(callExpr, uiCallExpr.getComboBox().getSelectionModel().getSelectedItem());
-
-                // Update number of expression placeholders to match number of parameters
-                uiCallExpr.setSetNumberOfParameters(callExpr.getExprs().size());
-
-                // Set drag and drop handlers to expression placeholders
-                for (ExprPlaceholder placeholder : uiCallExpr.getExprPlaceholders()) {
-                    setNestedExprPlaceholderHandlers(placeholder);
-                }
-
-                selectedFlowRoot.updateLayout();
-            });
-            out = uiCallExpr;
-        } else if (expr instanceof ArrayLit arrayLit) {
-            out = new UIArray(arrayLit.getId());
-        }
-
-        // If an expression was generated and event handlers for drag events
-        if (out != null) {
-            setExprHandlers(out);
-        }
-
-        // Populate expression with model information
-        updateExpr(out, expr);
-
-        // Add drag and drop handlers to expressions placeholders nested within other expressions
-        if (out instanceof UIExprContainer uiExprContainer) {
-            for (ExprPlaceholder placeholder : uiExprContainer.getExprPlaceholders()) {
-                setNestedExprPlaceholderHandlers(placeholder);
-            }
-        }
-
-        return out;
-    }
-
-    private void updateExpr(UIExpr uiExpr, Expr expr) {
-        // Populate UI fields with information from the model
-        if (expr instanceof BoolLit boolLit && uiExpr instanceof UIBool uiBool) {
-            uiBool.getComboBox().getSelectionModel().select(boolLit.getVal() ? "True" : "False");
-        } else if (expr instanceof CharLit charLit && uiExpr instanceof UIChar uiChar) {
-            uiChar.getTextProperty().set(Character.toString(charLit.getVal()));
-        } else if (expr instanceof IntLit intLit && uiExpr instanceof UIInt uiInt) {
-            uiInt.getTextProperty().set(Integer.toString(intLit.getVal()));
-        } else if (expr instanceof VarExpr varExpr && uiExpr instanceof UIVar uiVar) {
-            uiVar.getTextProperty().set(varExpr.getIdentifier());
-        } else if (expr instanceof OpExpr opExpr && uiExpr instanceof UIOpExpr uiOpExpr) {
-            if (opExpr.getOp() != null) {
-                uiOpExpr.getComboBox().getSelectionModel().select(opExpr.getOp().toString());
-            } else {
-                uiOpExpr.getComboBox().getSelectionModel().clearSelection();
-            }
-        } else if (expr instanceof ModifierExpr modExpr && uiExpr instanceof UIModifierExpr uiModExpr) {
-            if (modExpr.getModifier() != null) {
-                uiModExpr.getComboBox().getSelectionModel().select(modExpr.getModifier().toString());
-            } else {
-                uiModExpr.getComboBox().getSelectionModel().clearSelection();
-            }
-        } else if (expr instanceof CallExpr callExpr && uiExpr instanceof UICallExpr uiCallExpr) {
-            uiCallExpr.getComboBox().getSelectionModel().select(callExpr.getIdentifier());
-        } else if (expr instanceof ArrayLit arrayLit && uiExpr instanceof UIArray uiArray) {
-            uiArray.setNumberOfElements(arrayLit.getExprs().size() + 1);
-        }
-
-        if (expr instanceof ExprContainer exprContainer && uiExpr instanceof UIExprContainer uiExprContainer) {
-            // If expression contains child expressions, generate child expressions
-            List<Expr> exprList = exprContainer.getExprs();
-            for (int i = 0; i < exprList.size(); i++) {
-                uiExprContainer.getExprPlaceholders().get(i).setExpr(generateExpr(exprList.get(i)));
-            }
-        }
-
-        FlowException error = viewModel.getError();
-        if (error != null && uiExpr != null) {
-            // If an error was found when converting to another language, update styling to communicate this
-            if (error.getErrorType() == ErrorType.Expr && error.getId() == uiExpr.getExprId()) {
-                uiExpr.setStyleClass("error");
-            } else {
-                uiExpr.setStyleClass("default");
-            }
-        } else if (uiExpr != null) {
-            uiExpr.setStyleClass("default");
-        }
-    }
 
     private void addFunction() {
         // Build and show JavaFX stage that allows user to select function signature and parameters' typed identifiers
@@ -692,37 +209,25 @@ public class EditorView extends BorderPane {
             }
 
             // Gather data input from widgets
-            String identifer = addFunctionStage.getIdentifer();
+            String identifier = addFunctionStage.getIdentifer();
             String returnType = addFunctionStage.getReturnType();
             List<String> paramIdentifiers = addFunctionStage.getParameterIdentifiers();
             List<String> paramTypes = addFunctionStage.getParameterTypes();
 
-            // Create function's UIFlows
-            UIFlow flowRoot = new UIFlow(UICell.IRRELEVANT_ID);
-            UIFlow flowBody = new UIFlow(UICell.IRRELEVANT_ID);
-            UISquircle start = new UISquircle("Start", UICell.IRRELEVANT_ID);
-            UISquircle end = new UISquircle("End", UICell.IRRELEVANT_ID);
-            flowRoot.addCell(start, 0);
-            flowRoot.addCell(flowBody, 1);
-            flowRoot.addCell(end, 2);
-
-            // Add function to View maps
-            functionRootMap.put(identifer, flowRoot);
-            functionFlowMap.put(identifer, flowBody);
-
-            // Set event handlers for root UIFlow placeholder
-            setCellPlaceholderHandlers(flowBody.getPlaceholder());
+            // Inform viewModel of gathered information
+            viewModel.addFunction(identifier, returnType, paramIdentifiers, paramTypes);
 
             // Create ViewPort and add it to the editor TabPane
-            ZoomableScrollPane editorView = new ZoomableScrollPane(flowRoot);
+            ZoomableScrollPane editorView = new ZoomableScrollPane(viewModel.getFlowRoot(identifier));
             editorView.setId("grid");
-            Tab tab = new Tab(identifer, editorView);
+            Tab tab = new Tab(identifier, editorView);
             editorRoot.getTabs().add(tab);
 
-            // Inform viewModel of gathered information
-            viewModel.addFunction(identifer, returnType, paramIdentifiers, paramTypes);
-            selectFlow(identifer);
+            // Select newly created function
+            updateTabs();
+            selectFlow(identifier);
 
+            // Close stage
             addFunctionStage.close();
         });
 
@@ -767,13 +272,8 @@ public class EditorView extends BorderPane {
             // Change tab name to new identifier
             editorRoot.getSelectionModel().getSelectedItem().setText(editFunctionStage.getIdentifer());
 
-            // Change map keys to new identifier
-            functionRootMap.remove(selectedFlow);
-            functionFlowMap.remove(selectedFlow);
-            functionFlowMap.put(editFunctionStage.getIdentifer(), selectedFlowBody);
-            functionRootMap.put(editFunctionStage.getIdentifer(), selectedFlowRoot);
-
             // Re-select updated function
+            updateTabs();
             selectFlow(editFunctionStage.getIdentifer());
 
             editFunctionStage.close();
@@ -782,31 +282,7 @@ public class EditorView extends BorderPane {
         editFunctionStage.showAndWait();
     }
 
-    private void removeFunction(String identifier) {
-        // Removes a function from the editor interface
-        functionFlowMap.remove(identifier);
-
-        // Search for tab with matching identifier
-        Tab selectedTab = null;
-        for (Tab tab : editorRoot.getTabs()) {
-            selectedTab = tab.getText().equals(identifier) ? tab : selectedTab;
-        }
-
-        // Remove resulting tab if one is found
-        if (selectedTab != null) {
-            editorRoot.getTabs().remove(selectedTab);
-        }
-
-        // Inform the viewModel of the change
-        viewModel.removeFunction(identifier);
-    }
-
     private void selectFlow(String identifier) {
-        // Update attributes with information from maps
-        selectedFlow = identifier;
-        selectedFlowRoot = functionRootMap.get(identifier);
-        selectedFlowBody = functionFlowMap.get(identifier);
-
         // Inform viewModel of selection
         viewModel.selectModel(identifier);
 
@@ -822,7 +298,5 @@ public class EditorView extends BorderPane {
 
         editButton.setDisable(identifier.equals("main"));
         removeButton.setDisable(identifier.equals("main"));
-
-        update();
     }
 }

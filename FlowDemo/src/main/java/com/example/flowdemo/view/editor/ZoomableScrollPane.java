@@ -29,6 +29,7 @@ public class ZoomableScrollPane extends ScrollPane {
         this.content = content;
         this.zoomGroup = new Group(content);
 
+
         contentNode = new BorderPane(zoomGroup);
         contentNode.setId("grid");
         contentNode.setOnScroll(e -> {

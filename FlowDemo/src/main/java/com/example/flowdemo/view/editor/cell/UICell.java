@@ -110,7 +110,7 @@ public abstract class UICell extends Group {
     }
 
     /**
-     * Getter for pseudocode label
+     * Getter for pseudocode label JavaFX object
      * @return pseudocode label
      */
     public Label getPseudoLabel() {

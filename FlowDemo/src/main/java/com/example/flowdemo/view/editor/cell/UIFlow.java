@@ -133,15 +133,15 @@ public class UIFlow extends UICell {
             // Position cell correctly
             UICell prevCell = cells.get(i-1);
             UICell cell = cells.get(i);
-            double xOffset = prevCell.getTranslateX() + (prevCell.attachBotX() - cell.attachTopX());
-            double yOffset = prevCell.getTranslateY() + prevCell.attachBotY() + cell.attachTopY() + CELL_PADDING;
-            cell.setTranslateX(xOffset);
-            cell.setTranslateY(yOffset);
+            double xTranslate = prevCell.getTranslateX() + (prevCell.attachBotX() - cell.attachTopX());
+            double yTranslate = prevCell.getTranslateY() + prevCell.attachBotY() + cell.attachTopY() + CELL_PADDING;
+            cell.setTranslateX(xTranslate);
+            cell.setTranslateY(yTranslate);
 
             // Draw flow line
             PolylineArrow flowLine = new PolylineArrow(new Double[]{
                     cell.getTranslateX()+cell.attachTopX(), prevCell.getTranslateY() + prevCell.attachBotY(),
-                    cell.getTranslateX()+cell.attachTopX(), yOffset
+                    cell.getTranslateX()+cell.attachTopX(), yTranslate
             });
             lines.add(flowLine);
             getChildren().add(flowLine);
