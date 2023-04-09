@@ -12,7 +12,6 @@ import com.example.flowdemo.view.editor.cell.*;
 import com.example.flowdemo.view.editor.expr.*;
 import com.example.flowdemo.view.editor.menu.NewItem;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -552,8 +551,8 @@ public class EditorViewModel {
         dragNode = null;
 
         // Find and assign the dragNode from id, then remove it from the model
-        dragNode = selectedModel.getByID(source.getCellID());
-        selectedModel.removeByID(source.getCellID());
+        dragNode = selectedModel.getNodeByID(source.getCellID());
+        selectedModel.removeNodeByID(source.getCellID());
 
         // Insert the cell's model id into the drag-board
         ClipboardContent content = new ClipboardContent();
@@ -579,7 +578,7 @@ public class EditorViewModel {
     public void onCellDropped(DragEvent e, UICell target) {
         if (isNodeDragged()) {
             // If a FlowNode is being dragged insert it before the corresponding node it was dropped on
-            selectedModel.insertByID(dragNode, target.getCellID());
+            selectedModel.insertNodeByID(dragNode, target.getCellID());
             dragNode = null;
         }
 
@@ -614,7 +613,7 @@ public class EditorViewModel {
             // If cell ID is greater than zero then it is within a nested Flow, otherwise it is in the top Flow
             if (placeholder.getCellID() >= 0) {
                 // Find FlowNode which contains the Flow the placeholder represents
-                FlowNode targetNode = selectedModel.getByID(placeholder.getCellID());
+                FlowNode targetNode = selectedModel.getNodeByID(placeholder.getCellID());
 
                 // Insert dragNode into the first position of the found Flow
                 if (targetNode instanceof FlowContainer container) {
@@ -750,7 +749,7 @@ public class EditorViewModel {
     public void onExprPlaceholderDrop(DragEvent e, ExprPlaceholder placeholder) {
         if (dragExpr != null) {
             // Find FlowNode which contains the expression placeholder
-            FlowNode parentNode = selectedModel.getByID(placeholder.getExprId());
+            FlowNode parentNode = selectedModel.getNodeByID(placeholder.getExprId());
 
             // Insert dragExpr into model FlowNode
             if (parentNode instanceof ExprContainer container) {
@@ -774,7 +773,7 @@ public class EditorViewModel {
     public void onNestedExprPlaceholderDrop(DragEvent e, ExprPlaceholder placeholder) {
         if (dragExpr != null) {
             // Find expression which contains the expression placeholder
-            Expr parentExpr = selectedModel.getExprParentById(placeholder.getExprId());
+            Expr parentExpr = selectedModel.getExprById(placeholder.getExprId());
 
             // Insert dragExpr into model expression
             if (parentExpr instanceof ExprContainer container) {
@@ -898,7 +897,7 @@ public class EditorViewModel {
             for (FlowNode node : flow.getFlowNodes()) {
                 if (node instanceof CallNode callNode) {
                     if (callNode.getIdentifier().equals(identifier)) {
-                        flow.removeByID(callNode.getId());
+                        flow.removeNodeByID(callNode.getId());
                     }
                 } else if (node instanceof ExprContainer exprContainer) {
                     for (Expr expr : exprContainer.getExprs()) {
@@ -931,7 +930,7 @@ public class EditorViewModel {
         for (FlowNode node : flow.getFlowNodes()) {
             if (node instanceof CallNode callNode) {
                 if (callNode.getIdentifier().equals(identifier)) {
-                    searchFlow.removeByID(callNode.getId());
+                    searchFlow.removeNodeByID(callNode.getId());
                 }
             } else if (node instanceof ExprContainer exprContainer) {
                 for (Expr expr : exprContainer.getExprs()) {

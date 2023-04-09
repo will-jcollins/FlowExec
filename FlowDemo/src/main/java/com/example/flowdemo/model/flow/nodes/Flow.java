@@ -92,37 +92,6 @@ public class Flow implements Serializable {
         return result;
     }
 
-    /**
-     * Returns expression which contains an expression with id that exists within nested expression structure
-     * @param id id of target expression
-     * @return expr object that contains an expression which matches the id passed
-     */
-    public Expr getExprParentById(int id) {
-        Expr result = null;
-
-        for (FlowNode node : nodes) {
-            // If node contains a flow, search within node's flow(s)
-            if (node instanceof FlowContainer container) {
-                for (Flow flow : container.getFlows()) {
-                    result = (result == null) ? flow.getExprById(id) : result;
-                }
-            }
-
-            // If node contains an expr, search all expressions for expr matching parameter id
-            if (node instanceof ExprContainer container) {
-                for (Expr expr : container.getExprs()) {
-                    result = (result == null) ? ExprContainer.searchExpr(expr, id) : result;
-                }
-            }
-
-            // If a result has been found break loop and return result
-            if (result != null) {
-                break;
-            }
-        }
-
-        return result;
-    }
 
     /**
      * Returns node which contains the expression with the id passed
@@ -183,7 +152,7 @@ public class Flow implements Serializable {
      * @param id id of target FlowNode
      * @return target FlowNode object
      */
-    public FlowNode getByID(int id) {
+    public FlowNode getNodeByID(int id) {
         FlowNode result = null;
 
         for (int i = 0; i < nodes.size(); i++) {
@@ -193,7 +162,7 @@ public class Flow implements Serializable {
             } else if (nodes.get(i) instanceof FlowContainer container) {
                 // If node contains Flow objects, search flows for matching node
                 for (Flow flow : container.getFlows()) {
-                    result = (result == null) ? flow.getByID(id) : result;
+                    result = (result == null) ? flow.getNodeByID(id) : result;
                 }
             }
 
@@ -211,7 +180,7 @@ public class Flow implements Serializable {
      * @param node FlowNode to be inserted
      * @param id id of node new FlowNode should be inserted before
      */
-    public void insertByID(FlowNode node, int id) {
+    public void insertNodeByID(FlowNode node, int id) {
         for (int i = 0; i < nodes.size(); i++) {
             // If node matches
             if (nodes.get(i).getId() == id) {
@@ -219,7 +188,7 @@ public class Flow implements Serializable {
                 break;
             } else if (nodes.get(i) instanceof FlowContainer container) {
                 for (Flow flow : container.getFlows()) {
-                    flow.insertByID(node, id);
+                    flow.insertNodeByID(node, id);
                 }
             }
         }
@@ -229,7 +198,7 @@ public class Flow implements Serializable {
      * Removes node with id from node list
      * @param id id of FlowNode to be removed
      */
-    public void removeByID(int id) {
+    public void removeNodeByID(int id) {
         for (int i = 0; i < nodes.size(); i++) {
             if (nodes.get(i).getId() == id) {
                 // If node is a match remove it from the list
@@ -237,7 +206,7 @@ public class Flow implements Serializable {
             } else if (nodes.get(i) instanceof FlowContainer container) {
                 // If node is a Flow container, recursively call removeById on Flow
                 for (Flow flow : container.getFlows()) {
-                    flow.removeByID(id);
+                    flow.removeNodeByID(id);
                 }
             }
         }
@@ -278,7 +247,7 @@ public class Flow implements Serializable {
     }
 
     /**
-     * @return unmodifiable view of flow's nodes
+     * @return unmodifiable list of flow's nodes
      */
     public List<FlowNode> getFlowNodes() {
         return Collections.unmodifiableList(nodes);

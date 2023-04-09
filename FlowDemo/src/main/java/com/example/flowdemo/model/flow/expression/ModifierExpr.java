@@ -49,7 +49,7 @@ public class ModifierExpr extends Expr implements ExprContainer {
         if (getId() == id) {
             out = this;
         } else {
-            out = (expr.getById(id) != null) ? expr.getById(id) : out;
+            if (expr != null) out = (expr.getById(id) != null) ? expr.getById(id) : out;
         }
 
         return out;

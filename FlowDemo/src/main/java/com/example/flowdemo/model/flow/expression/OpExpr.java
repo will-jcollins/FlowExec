@@ -49,8 +49,8 @@ public class OpExpr extends Expr implements ExprContainer {
         if (getId() == id) {
             out = this;
         } else {
-            out = (left.getById(id) != null) ? left.getById(id) : out;
-            out = (right.getById(id) != null) ? right.getById(id) : out;
+            if (left != null) out = (left.getById(id) != null) ? left.getById(id) : out;
+            if (right != null) out = (right.getById(id) != null) ? right.getById(id) : out;
         }
 
         return out;

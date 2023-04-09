@@ -209,7 +209,7 @@ public class PythonConverter extends FlowGrammarBaseVisitor<String> {
             case Sub:
                 return "-";
             case Div:
-                return "/";
+                return "//";
             case Mult:
                 return "*";
             case Mod:
