@@ -1,10 +1,9 @@
 module com.example.flowdemo {
     requires javafx.controls;
     requires javafx.fxml;
-    requires antlr;
+    requires org.antlr.antlr4.runtime;
 
     opens com.example.flowdemo to javafx.graphics;
-
 
     exports com.example.flowdemo.view.editor.expr;
     opens com.example.flowdemo.view.editor.expr to javafx.fxml;
