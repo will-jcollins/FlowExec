@@ -8,12 +8,13 @@ import com.example.flowdemo.model.transpiler.antlr.FlowGrammarParser;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 
 public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
     private static IdVisitor idVisitor = new IdVisitor();
     private FlowGrammarParser.DeclContext currentDecl;
-    private HashMap<String, FlowGrammarParser.DeclContext> functionMap = new HashMap<>();
-    private HashMap<String, FlowGrammarParser.SignatureContext> variableMap = new HashMap<>();
+    private Map<String, FlowGrammarParser.DeclContext> functionMap = new HashMap<>();
+    private Map<String, FlowGrammarParser.SignatureContext> variableMap = new HashMap<>();
 
     private static int toId(String value) {
         return Integer.parseInt(value.replaceAll("\\|", ""));
@@ -214,6 +215,9 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
         String identifier = signature.Idfr().getText();
         DataType type = DataType.fromString(signature.type().getText());
 
+        // Store outer scope variable table
+        Map<String, FlowGrammarParser.SignatureContext> outerScope = new HashMap<>(variableMap);
+
         // Check identifier is unique and include it in context
         if (!variableMap.containsKey(identifier)) {
             variableMap.put(identifier, signature);
@@ -244,7 +248,9 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
         // Analyse for loop body
         visit(ctx.block());
 
-        variableMap.remove(identifier); // Remove for loop iterator identifier from context
+        // Restore outer scope variable table
+        variableMap = outerScope;
+
         return DataType.VoidType; // Value is ignored
     }
 
@@ -256,8 +262,14 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
             throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Node , "While condition expression is not of boolean type");
         }
 
+        // Store outer scope variable table
+        Map<String, FlowGrammarParser.SignatureContext> outerScope = new HashMap<>(variableMap);
+
         // Analyse while loop body
         visit(ctx.block());
+
+        // Restore outer scope variable table
+        variableMap = outerScope;
 
         return DataType.VoidType; // Value is ignored
     }
@@ -270,9 +282,21 @@ public class FlowGrammarAnalyser extends FlowGrammarBaseVisitor<DataType> {
             throw new FlowException(currentDecl.signature(0).Idfr().getText(), toId(ctx.ComponentId().getText()), ErrorType.Node, "If / else condition expression is not of boolean type");
         }
 
-        // Analyse if & else block
+        // Store outer scope variable table
+        Map<String, FlowGrammarParser.SignatureContext> outerScope = new HashMap<>(variableMap);
+
+        // Analyse if block
         visit(ctx.block(0));
+
+        // Restore outer scope variable table
+        variableMap = outerScope;
+        outerScope = new HashMap<>(variableMap);
+
+        // Analyse else block
         visit(ctx.block(1));
+
+        // Restore outer scope variable table
+        variableMap = outerScope;
 
         return DataType.VoidType; // Value is ignored
     }
