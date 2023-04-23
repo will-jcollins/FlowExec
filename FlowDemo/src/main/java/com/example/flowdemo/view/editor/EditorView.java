@@ -1,23 +1,13 @@
 package com.example.flowdemo.view.editor;
 
-import com.example.flowdemo.model.flow.expression.*;
-import com.example.flowdemo.model.flow.nodes.*;
-import com.example.flowdemo.model.transpiler.ErrorType;
-import com.example.flowdemo.model.transpiler.FlowException;
-import com.example.flowdemo.view.editor.cell.*;
-import com.example.flowdemo.view.editor.expr.*;
 import com.example.flowdemo.view.editor.menu.FunctionOptionsStage;
 import com.example.flowdemo.view.editor.menu.ItemType;
 import com.example.flowdemo.view.editor.menu.NewItem;
 
-import javafx.application.Platform;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
-import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 
 import java.util.*;
@@ -144,7 +134,7 @@ public class EditorView extends BorderPane {
             }
 
             if (complete) {
-                viewModel.convertModel(compileChoice.getSelectionModel().getSelectedItem());
+                viewModel.compileModel(compileChoice.getSelectionModel().getSelectedItem());
             } else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setContentText("All fields are not completed.");

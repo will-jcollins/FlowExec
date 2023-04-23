@@ -1,5 +1,6 @@
 package com.example.flowdemo.view.editor;
 
+import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
@@ -29,7 +30,6 @@ public class ZoomableScrollPane extends ScrollPane {
         this.content = content;
         this.zoomGroup = new Group(content);
 
-
         contentNode = new BorderPane(zoomGroup);
         contentNode.setId("grid");
         contentNode.setOnScroll(e -> {
@@ -55,7 +55,12 @@ public class ZoomableScrollPane extends ScrollPane {
         double zoomFactor = Math.exp(wheelDelta * zoomIntensity);
 
         Bounds innerBounds = zoomGroup.getLayoutBounds();
-        Bounds viewPortBounds = getViewportBounds();
+        // Create a deep copy of viewPortBounds
+        Bounds viewPortBounds = new BoundingBox(
+                this.getViewportBounds().getMinX(),
+                this.getViewportBounds().getMinY(),
+                this.getViewportBounds().getWidth(),
+                this.getViewportBounds().getHeight());
 
         // Calculate pixel offset in range 0-1
         double valX = this.getHvalue() * (innerBounds.getWidth() - viewPortBounds.getWidth());

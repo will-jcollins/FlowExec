@@ -1015,11 +1015,15 @@ public class EditorViewModel {
     }
 
     /**
-     * Parses, analyses, and converts all models that exist in the system
-     * Also updates the getError() method to return any semantic errors found
+     * Parses, analyses, and compiles all models that exist in the system
+     * and then opens a file save dialog to save the compiled code
+     * Also updates the error attribute to broadcast any semantic errors found
      * @param language name of the language to convert models to
      */
-    public void convertModel(String language) {
+    public void compileModel(String language) {
+        // Clear any previous errors
+        error = null;
+
         // Build flow-language code from models
         StringBuilder source = new StringBuilder();
         for (Flow flow : flowMap.values()) {
@@ -1105,13 +1109,7 @@ public class EditorViewModel {
                 successAlert.showAndWait();
             }
         }
-    }
-
-    /**
-     * @return FlowException found when analysing models (null if none were found)
-     */
-    public FlowException getError() {
-        return error;
+        update();
     }
 
     /**

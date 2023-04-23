@@ -6,7 +6,7 @@ import javafx.stage.Stage;
 
 public class FlowExe extends Application {
     @Override
-    public void start(Stage stage) throws Exception {
+    public void start(Stage stage) {
         ViewHandler vh = new ViewHandler();
         vh.start();
     }
