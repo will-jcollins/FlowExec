@@ -34,8 +34,6 @@ public class UIFlow extends UICell {
         addCell(placeholder, 0);
     }
 
-
-
     /**
      * Inserts a cell into the visual flow and draws necessary flow-lines
      * @param cell cell to be inserted
@@ -151,18 +149,6 @@ public class UIFlow extends UICell {
         for (int i = 0; i < lines.size(); i++) {
             lines.get(i).toBack();
         }
-
-        // Ensure all cells' setTranslateX is positive (ensures correct positioning in child classes)
-//        double minTranslate = 0;
-//        for (Node node : getChildren()) {
-//            minTranslate = Math.min(node.getTranslateX(), minTranslate);
-//        }
-//
-//        minTranslate = Math.abs(minTranslate);
-//
-//        for (Node node : getChildren()) {
-//            node.setTranslateX(node.getTranslateX() + minTranslate);
-//        }
     }
 
     @Override

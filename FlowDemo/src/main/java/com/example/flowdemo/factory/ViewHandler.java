@@ -3,9 +3,12 @@ package com.example.flowdemo.factory;
 import com.example.flowdemo.model.flow.nodes.Flow;
 import com.example.flowdemo.view.editor.EditorView;
 import com.example.flowdemo.view.editor.EditorViewModel;
+import com.example.flowdemo.view.editor.cell.*;
 import com.example.flowdemo.view.editor.expr.UIArray;
+import com.example.flowdemo.view.editor.expr.UIBool;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 
