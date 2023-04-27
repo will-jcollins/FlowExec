@@ -8,7 +8,7 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 
 /**
- * Abstract class for visual representations of FlowNode objects
+ * Base class for UI classes that represent FlowNodes in the editor
  */
 public abstract class UICell extends Group {
     public static String CSS_SHAPE_CLASS = "-shape"; // Suffix for CSS shape classes

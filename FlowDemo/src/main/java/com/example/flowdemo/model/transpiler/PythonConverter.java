@@ -182,7 +182,7 @@ public class PythonConverter extends FlowGrammarBaseVisitor<String> {
         if (operator == Operator.Index) {
             return visit(ctx.expr(0)) + "[" + visit(ctx.expr(1)) + "]";
         } else {
-            return visit(ctx.expr(0)) + " " + visit(ctx.op()) + " " + visit(ctx.expr(1));
+            return "(" + visit(ctx.expr(0)) + " " + visit(ctx.op()) + " " + visit(ctx.expr(1)) + ")";
         }
     }
 

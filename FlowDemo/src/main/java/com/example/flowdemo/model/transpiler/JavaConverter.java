@@ -92,12 +92,7 @@ public class JavaConverter extends FlowGrammarBaseVisitor<String> {
 
     @Override
     public String visitOutputStmt(FlowGrammarParser.OutputStmtContext ctx) {
-        DataType type = typeAnalyser.visit(ctx.expr());
-        if (type == DataType.IntArrayType || type == DataType.BoolArrayType || type == DataType.CharArrayType) {
-            return "System.out.println(Arrays.toString(" + visit(ctx.expr()) + "));";
-        } else {
-            return "System.out.println(" + visit(ctx.expr()) + ");";
-        }
+        return "System.out.println(" + visit(ctx.expr()) + ");";
     }
 
     @Override
@@ -223,7 +218,7 @@ public class JavaConverter extends FlowGrammarBaseVisitor<String> {
         if (operator == Operator.Index) {
             return visit(ctx.expr(0)) + "[" + visit(ctx.expr(1)) + "]";
         } else {
-            return visit(ctx.expr(0)) + " " + visit(ctx.op()) + " " + visit(ctx.expr(1));
+            return "(" + visit(ctx.expr(0)) + " " + visit(ctx.op()) + " " + visit(ctx.expr(1)) + ")";
         }
     }
 

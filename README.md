@@ -10,6 +10,8 @@ To use this program, it must be packaged into a jar file using Maven. Open a she
 
 ``mvn package``
 
+The output jar will be located at “/target/FlowDemo-1.0.jar”.
+
 ### Using Flow-Exec
 To add an instruction to the flow-chart, drag one from the elements list on the left onto a placeholder on the chart view or an existing instruction. Similarly to add an expression to an expression drag one from the elements list on the left onto an expression placeholder or an existing expression. Existing instructions and expressions can be moved by dragging them.
 

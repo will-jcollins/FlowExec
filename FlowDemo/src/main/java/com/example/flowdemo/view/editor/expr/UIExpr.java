@@ -7,10 +7,13 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.shape.Rectangle;
 
+/**
+ * Base class for UI classes that represent expressions in the editor
+ */
 public abstract class UIExpr extends Group {
     public static final int IRRELEVANT_ID = -1;
-    public static final double PREF_WIDTH = 100.0d;
-    public static final double PREF_HEIGHT = 30.0d;
+    public static final double PREF_WIDTH = 100.0d; // Forced width of input widgets (fixes incorrect width reporting)
+    public static final double PREF_HEIGHT = 30.0d; // Forced height of input widgets (fixes incorrect height reporting)
     private final int id;
     private Rectangle mouseTarget;
 
